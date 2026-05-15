@@ -37,7 +37,22 @@ class Settings(BaseSettings):
     SWAGGER_PASSWORD: str = "admin123"
     
     # CORS
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
+    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:3001", "http://localhost:8000"]
+    
+    # DigitalOcean Spaces (S3-compatible storage)
+    SPACES_ACCESS_KEY: str = ""
+    SPACES_SECRET_KEY: str = ""
+    SPACES_BUCKET_NAME: str = "satryawiguna-bucket"
+    SPACES_REGION: str = "sgp1"
+    SPACES_ENDPOINT_URL: str = "https://sgp1.digitaloceanspaces.com"
+    SPACES_ORIGIN_ENDPOINT: str = "https://satryawiguna-bucket.sgp1.digitaloceanspaces.com"
+    
+    @property
+    def SPACES_UPLOAD_FOLDER(self) -> str:
+        """Determine upload folder based on environment: 'dev' for local/dev, 'prod' for production"""
+        if self.APP_ENV == "production":
+            return "prod"
+        return "dev"
     
     @property
     def DATABASE_URL(self) -> str:

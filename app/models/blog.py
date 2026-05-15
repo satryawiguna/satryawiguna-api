@@ -17,7 +17,7 @@ class BlogPost(Base):
     slug = Column(String(255), unique=True, nullable=False, index=True)
     excerpt = Column(Text, nullable=True)
     content = Column(Text, nullable=True)
-    featured_image_id = Column(BigInteger, ForeignKey("media.id", ondelete="SET NULL"), nullable=True)
+    featured_image_url = Column(String(500), nullable=True)
     author_id = Column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     status = Column(String(50), nullable=False, default="draft")
     published_at = Column(DateTime, nullable=True)
@@ -25,7 +25,6 @@ class BlogPost(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
     # Relationships
-    featured_image = relationship("Media", foreign_keys=[featured_image_id])
     author = relationship("User", back_populates="blog_posts", foreign_keys=[author_id])
     blog_post_categories = relationship("BlogPostCategory", back_populates="blog_post", cascade="all, delete-orphan")
     blog_post_tags = relationship("BlogPostTag", back_populates="blog_post", cascade="all, delete-orphan")

@@ -18,6 +18,7 @@ class User(Base):
     password = Column(String(255), nullable=False)
     phone = Column(String(20), nullable=True)
     otp = Column(String(6), nullable=True)
+    avatar_url = Column(String(500), nullable=True)
     email_verified_at = Column(DateTime, nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

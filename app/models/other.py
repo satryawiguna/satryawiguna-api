@@ -1,8 +1,7 @@
 """
 Skill, Testimonial, Media and Settings models
 """
-from sqlalchemy import Column, BigInteger, String, Text, Integer, Boolean, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, BigInteger, String, Text, Integer, Boolean, DateTime
 from datetime import datetime
 
 from app.core.database import Base
@@ -29,19 +28,16 @@ class Testimonial(Base):
     position = Column(String(255), nullable=True)
     company = Column(String(255), nullable=True)
     content = Column(Text, nullable=False)
-    avatar_id = Column(BigInteger, ForeignKey("media.id", ondelete="SET NULL"), nullable=True)
+    avatar_url = Column(String(500), nullable=True)
     featured = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     
-    # Relationships
-    avatar = relationship("Media", foreign_keys=[avatar_id])
-
 
 class Media(Base):
     """Media model"""
     __tablename__ = "media"
     
-    id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
+    id = Column(String(36), primary_key=True, index=True)
     file_name = Column(String(255), nullable=False)
     file_path = Column(String(500), nullable=False)
     mime_type = Column(String(100), nullable=True)

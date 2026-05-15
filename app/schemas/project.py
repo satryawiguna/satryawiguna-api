@@ -15,7 +15,7 @@ class ProjectBase(BaseModel):
     featured: bool = False
     demo_url: Optional[str] = None
     repository_url: Optional[str] = None
-    thumbnail_id: Optional[int] = None
+    thumbnail_url: Optional[str] = None
 
 
 class ProjectCreate(ProjectBase):
@@ -32,7 +32,7 @@ class ProjectUpdate(BaseModel):
     featured: Optional[bool] = None
     demo_url: Optional[str] = None
     repository_url: Optional[str] = None
-    thumbnail_id: Optional[int] = None
+    thumbnail_url: Optional[str] = None
     published_at: Optional[datetime] = None
 
 

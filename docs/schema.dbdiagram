@@ -1,276 +1,280 @@
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "darkMode": true,
   "gridEnabling": false,
-  "detailLevel": "All",
-  "tablePositions": [
-    {
-      "name": "users",
-      "schemaName": "public",
-      "x": 494.6884765625,
-      "y": 12
-    },
-    {
-      "name": "roles",
-      "schemaName": "public",
-      "x": 494.6884765625,
-      "y": 410
-    },
-    {
-      "name": "user_roles",
-      "schemaName": "public",
-      "x": 1019.45361328125,
-      "y": 12
-    },
-    {
-      "name": "projects",
-      "schemaName": "public",
-      "x": 1019.45361328125,
-      "y": 186
-    },
-    {
-      "name": "project_images",
-      "schemaName": "public",
-      "x": 1573.51025390625,
-      "y": 12
-    },
-    {
-      "name": "blog_posts",
-      "schemaName": "public",
-      "x": 1019.45361328125,
-      "y": 649
-    },
-    {
-      "name": "categories",
-      "schemaName": "public",
-      "x": 494.6884765625,
-      "y": 822
-    },
-    {
-      "name": "blog_post_categories",
-      "schemaName": "public",
-      "x": 1573.51025390625,
-      "y": 186
-    },
-    {
-      "name": "tags",
-      "schemaName": "public",
-      "x": 494.6884765625,
-      "y": 996
-    },
-    {
-      "name": "blog_post_tags",
-      "schemaName": "public",
-      "x": 1573.51025390625,
-      "y": 360
-    },
-    {
-      "name": "skills",
-      "schemaName": "public",
-      "x": 236.63720703125,
-      "y": 12
-    },
-    {
-      "name": "testimonials",
-      "schemaName": "public",
-      "x": 1019.45361328125,
-      "y": 1079
-    },
-    {
-      "name": "media",
-      "schemaName": "public",
-      "x": 494.6884765625,
-      "y": 552
-    },
-    {
-      "name": "settings",
-      "schemaName": "public",
-      "x": 12,
-      "y": 12
-    }
-  ],
-  "tableGroupCollapseStates": [],
-  "stickyNoteLayouts": [],
-  "referencePaths": [
-    {
-      "firstFieldNames": [
-        "user_id"
-      ],
-      "firstTableName": "user_roles",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "id"
-      ],
-      "secondTableName": "users",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "role_id"
-      ],
-      "firstTableName": "user_roles",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "id"
-      ],
-      "secondTableName": "roles",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "author_id"
-      ],
-      "firstTableName": "blog_posts",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "id"
-      ],
-      "secondTableName": "users",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "featured_image_id"
-      ],
-      "firstTableName": "blog_posts",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "id"
-      ],
-      "secondTableName": "media",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "thumbnail_id"
-      ],
-      "firstTableName": "projects",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "id"
-      ],
-      "secondTableName": "media",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "project_id"
-      ],
-      "firstTableName": "project_images",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "id"
-      ],
-      "secondTableName": "projects",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "media_id"
-      ],
-      "firstTableName": "project_images",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "id"
-      ],
-      "secondTableName": "media",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "post_id"
-      ],
-      "firstTableName": "blog_post_categories",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "id"
-      ],
-      "secondTableName": "blog_posts",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "category_id"
-      ],
-      "firstTableName": "blog_post_categories",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "id"
-      ],
-      "secondTableName": "categories",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "post_id"
-      ],
-      "firstTableName": "blog_post_tags",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "id"
-      ],
-      "secondTableName": "blog_posts",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "tag_id"
-      ],
-      "firstTableName": "blog_post_tags",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "id"
-      ],
-      "secondTableName": "tags",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "avatar_id"
-      ],
-      "firstTableName": "testimonials",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
-        "id"
-      ],
-      "secondTableName": "media",
-      "secondSchemaName": "public",
-      "secondRelation": "1",
-      "checkPoints": []
-    }
-  ]
+  "currentViewName": null,
+  "defaultView": {
+    "detailLevel": "All",
+    "tablePositions": [
+      {
+        "name": "users",
+        "schemaName": "public",
+        "x": 494.6884765625,
+        "y": 12
+      },
+      {
+        "name": "roles",
+        "schemaName": "public",
+        "x": 494.6884765625,
+        "y": 410
+      },
+      {
+        "name": "user_roles",
+        "schemaName": "public",
+        "x": 1019.45361328125,
+        "y": 12
+      },
+      {
+        "name": "projects",
+        "schemaName": "public",
+        "x": 1019.45361328125,
+        "y": 186
+      },
+      {
+        "name": "project_images",
+        "schemaName": "public",
+        "x": 1573.51025390625,
+        "y": 12
+      },
+      {
+        "name": "blog_posts",
+        "schemaName": "public",
+        "x": 1019.45361328125,
+        "y": 649
+      },
+      {
+        "name": "categories",
+        "schemaName": "public",
+        "x": 494.6884765625,
+        "y": 822
+      },
+      {
+        "name": "blog_post_categories",
+        "schemaName": "public",
+        "x": 1573.51025390625,
+        "y": 186
+      },
+      {
+        "name": "tags",
+        "schemaName": "public",
+        "x": 494.6884765625,
+        "y": 996
+      },
+      {
+        "name": "blog_post_tags",
+        "schemaName": "public",
+        "x": 1573.51025390625,
+        "y": 360
+      },
+      {
+        "name": "skills",
+        "schemaName": "public",
+        "x": 236.63720703125,
+        "y": 12
+      },
+      {
+        "name": "testimonials",
+        "schemaName": "public",
+        "x": 1019.45361328125,
+        "y": 1079
+      },
+      {
+        "name": "media",
+        "schemaName": "public",
+        "x": 494.6884765625,
+        "y": 552
+      },
+      {
+        "name": "settings",
+        "schemaName": "public",
+        "x": 12,
+        "y": 12
+      }
+    ],
+    "tableGroupCollapseStates": [],
+    "stickyNoteLayouts": [],
+    "referencePaths": [
+      {
+        "firstFieldNames": [
+          "user_id"
+        ],
+        "firstTableName": "user_roles",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "id"
+        ],
+        "secondTableName": "users",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "role_id"
+        ],
+        "firstTableName": "user_roles",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "id"
+        ],
+        "secondTableName": "roles",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "author_id"
+        ],
+        "firstTableName": "blog_posts",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "id"
+        ],
+        "secondTableName": "users",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "featured_image_id"
+        ],
+        "firstTableName": "blog_posts",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "id"
+        ],
+        "secondTableName": "media",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "thumbnail_id"
+        ],
+        "firstTableName": "projects",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "id"
+        ],
+        "secondTableName": "media",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "project_id"
+        ],
+        "firstTableName": "project_images",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "id"
+        ],
+        "secondTableName": "projects",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "media_id"
+        ],
+        "firstTableName": "project_images",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "id"
+        ],
+        "secondTableName": "media",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "post_id"
+        ],
+        "firstTableName": "blog_post_categories",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "id"
+        ],
+        "secondTableName": "blog_posts",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "category_id"
+        ],
+        "firstTableName": "blog_post_categories",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "id"
+        ],
+        "secondTableName": "categories",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "post_id"
+        ],
+        "firstTableName": "blog_post_tags",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "id"
+        ],
+        "secondTableName": "blog_posts",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "tag_id"
+        ],
+        "firstTableName": "blog_post_tags",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "id"
+        ],
+        "secondTableName": "tags",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "avatar_id"
+        ],
+        "firstTableName": "testimonials",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "id"
+        ],
+        "secondTableName": "media",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      }
+    ]
+  },
+  "views": {}
 }

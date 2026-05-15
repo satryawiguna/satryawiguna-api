@@ -43,7 +43,7 @@ class TestimonialBase(BaseModel):
     position: Optional[str] = Field(None, max_length=255)
     company: Optional[str] = Field(None, max_length=255)
     content: str = Field(..., min_length=1)
-    avatar_id: Optional[int] = None
+    avatar_url: Optional[str] = None
     featured: bool = False
 
 
@@ -58,7 +58,7 @@ class TestimonialUpdate(BaseModel):
     position: Optional[str] = Field(None, max_length=255)
     company: Optional[str] = Field(None, max_length=255)
     content: Optional[str] = Field(None, min_length=1)
-    avatar_id: Optional[int] = None
+    avatar_url: Optional[str] = None
     featured: Optional[bool] = None
 
 
@@ -86,9 +86,22 @@ class MediaCreate(MediaBase):
 
 class MediaResponse(MediaBase):
     """Schema for media response"""
-    id: int
+    id: str
     created_at: datetime
     
+    class Config:
+        from_attributes = True
+
+
+class MediaUploadResponse(BaseModel):
+    """Schema for media upload response — includes the full public URL"""
+    id: str
+    file_name: str
+    url: str
+    mime_type: Optional[str] = None
+    size: Optional[int] = None
+    created_at: datetime
+
     class Config:
         from_attributes = True
 

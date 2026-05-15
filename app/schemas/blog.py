@@ -12,7 +12,7 @@ class BlogPostBase(BaseModel):
     slug: str = Field(..., min_length=1, max_length=255)
     excerpt: Optional[str] = None
     content: Optional[str] = None
-    featured_image_id: Optional[int] = None
+    featured_image_url: Optional[str] = None
     status: str = Field(default="draft", max_length=50)
 
 
@@ -27,7 +27,7 @@ class BlogPostUpdate(BaseModel):
     slug: Optional[str] = Field(None, min_length=1, max_length=255)
     excerpt: Optional[str] = None
     content: Optional[str] = None
-    featured_image_id: Optional[int] = None
+    featured_image_url: Optional[str] = None
     status: Optional[str] = Field(None, max_length=50)
     published_at: Optional[datetime] = None
 
