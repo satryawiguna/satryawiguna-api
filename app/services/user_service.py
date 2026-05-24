@@ -59,14 +59,12 @@ class UserService:
         if not user:
             raise NotFoundError("User not found")
 
-        if user_data.email and user_data.email != user.email:
-            existing_user = await self.user_repository.get_by_email(user_data.email)
-            if existing_user:
-                raise DuplicateError("Email already registered")
-            user.email = user_data.email
-
         if user_data.name is not None:
             user.name = user_data.name
+        if user_data.phone is not None:
+            user.phone = user_data.phone
+        if user_data.avatar_url is not None:
+            user.avatar_url = user_data.avatar_url
 
         return await self.user_repository.update(user)
 
