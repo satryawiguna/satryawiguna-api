@@ -68,9 +68,6 @@ class UserService:
         if user_data.name is not None:
             user.name = user_data.name
 
-        if user_data.password is not None:
-            user.password = hash_password(user_data.password)
-
         return await self.user_repository.update(user)
 
     async def delete_user(self, user_id: int) -> bool:

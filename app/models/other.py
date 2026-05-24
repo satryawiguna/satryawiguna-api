@@ -1,7 +1,8 @@
 """
-Skill, Testimonial, Media and Settings models
+Skill, Media and Settings models
 """
-from sqlalchemy import Column, BigInteger, String, Text, Integer, Boolean, DateTime
+from sqlalchemy import Column, BigInteger, String, Text, Integer, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
 from datetime import datetime
 
 from app.core.database import Base
@@ -13,24 +14,14 @@ class Skill(Base):
     
     id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
     name = Column(String(255), nullable=False)
-    category = Column(String(255), nullable=True)
+    category_id = Column(BigInteger, ForeignKey("categories.id", ondelete="SET NULL"), nullable=True)
     level = Column(Integer, nullable=True)
-    icon = Column(String(255), nullable=True)
+    icon_url = Column(String(500), nullable=True)
     sort_order = Column(Integer, default=0, nullable=False)
-
-
-class Testimonial(Base):
-    """Testimonial model"""
-    __tablename__ = "testimonials"
     
-    id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
-    name = Column(String(255), nullable=False)
-    position = Column(String(255), nullable=True)
-    company = Column(String(255), nullable=True)
-    content = Column(Text, nullable=False)
-    avatar_url = Column(String(500), nullable=True)
-    featured = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    # Relationships
+    category = relationship("Category", back_populates="skills")
+    project_skills = relationship("ProjectSkill", back_populates="skill", cascade="all, delete-orphan")
     
 
 class Media(Base):

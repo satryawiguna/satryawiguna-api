@@ -1,8 +1,8 @@
 """
-Tests for blog post endpoints: /api/v1/blog-posts/*
+Tests for blog post endpoints.
 
-Public endpoints (GET) do not require authentication.
-Write endpoints (POST / PUT / DELETE) require authentication.
+Public endpoints (GET): /api/v1/blog-posts/*
+Write endpoints (POST / PUT / DELETE): /api/v1/admin/blog-posts/* (require authentication)
 
 Not-found behaviour:
 - GET by ID returns HTTP 200 with {"success": false, "status": 404} (route-level guard)
@@ -120,7 +120,7 @@ class TestCreateBlogPost:
         auth_headers: dict,
     ):
         response = await client.post(
-            "/api/v1/blog-posts",
+            "/api/v1/admin/blog-posts",
             json={**_POST_PAYLOAD, "author_id": test_user.id},
             headers=auth_headers,
         )
@@ -138,7 +138,7 @@ class TestCreateBlogPost:
         auth_headers: dict,
     ):
         response = await client.post(
-            "/api/v1/blog-posts",
+            "/api/v1/admin/blog-posts",
             json={
                 "title": "Another Post",
                 "slug": "existing-post",  # duplicate
@@ -156,7 +156,7 @@ class TestCreateBlogPost:
         self, client: AsyncClient, test_user: User
     ):
         response = await client.post(
-            "/api/v1/blog-posts",
+            "/api/v1/admin/blog-posts",
             json={**_POST_PAYLOAD, "author_id": test_user.id},
         )
 
@@ -176,7 +176,7 @@ class TestUpdateBlogPost:
         auth_headers: dict,
     ):
         response = await client.put(
-            f"/api/v1/blog-posts/{blog_post.id}",
+            f"/api/v1/admin/blog-posts/{blog_post.id}",
             json={"title": "Updated Title"},
             headers=auth_headers,
         )
@@ -190,7 +190,7 @@ class TestUpdateBlogPost:
         self, client: AsyncClient, auth_headers: dict
     ):
         response = await client.put(
-            "/api/v1/blog-posts/999999",
+            "/api/v1/admin/blog-posts/999999",
             json={"title": "Ghost"},
             headers=auth_headers,
         )
@@ -213,7 +213,7 @@ class TestUpdateBlogPost:
         await db.refresh(other)
 
         response = await client.put(
-            f"/api/v1/blog-posts/{other.id}",
+            f"/api/v1/admin/blog-posts/{other.id}",
             json={"slug": "existing-post"},  # slug already taken by blog_post
             headers=auth_headers,
         )
@@ -234,7 +234,7 @@ class TestDeleteBlogPost:
         auth_headers: dict,
     ):
         response = await client.delete(
-            f"/api/v1/blog-posts/{blog_post.id}", headers=auth_headers
+            f"/api/v1/admin/blog-posts/{blog_post.id}", headers=auth_headers
         )
 
         assert response.status_code == 200
@@ -244,7 +244,7 @@ class TestDeleteBlogPost:
         self, client: AsyncClient, auth_headers: dict
     ):
         response = await client.delete(
-            "/api/v1/blog-posts/999999", headers=auth_headers
+            "/api/v1/admin/blog-posts/999999", headers=auth_headers
         )
 
         assert response.status_code == 404

@@ -1,5 +1,5 @@
 """
-Tests for user endpoints: /api/v1/users/*
+Tests for admin user endpoints: /api/v1/admin/users/*
 
 All endpoints require authentication.
 
@@ -43,7 +43,7 @@ class TestGetUsers:
     async def test_get_users_success(
         self, client: AsyncClient, test_user: User, auth_headers: dict
     ):
-        response = await client.get("/api/v1/users", headers=auth_headers)
+        response = await client.get("/api/v1/admin/users", headers=auth_headers)
 
         assert response.status_code == 200
         body = response.json()
@@ -55,7 +55,7 @@ class TestGetUsers:
         self, client: AsyncClient, test_user: User, auth_headers: dict
     ):
         response = await client.get(
-            "/api/v1/users", params={"limit": 10}, headers=auth_headers
+            "/api/v1/admin/users", params={"limit": 10}, headers=auth_headers
         )
 
         assert response.status_code == 200
@@ -64,7 +64,7 @@ class TestGetUsers:
         assert body["pagination"]["total"] >= 1
 
     async def test_get_users_unauthenticated(self, client: AsyncClient):
-        response = await client.get("/api/v1/users")
+        response = await client.get("/api/v1/admin/users")
 
         assert response.status_code == 403
 
@@ -79,7 +79,7 @@ class TestGetUser:
         self, client: AsyncClient, test_user: User, auth_headers: dict
     ):
         response = await client.get(
-            f"/api/v1/users/{test_user.id}", headers=auth_headers
+            f"/api/v1/admin/users/{test_user.id}", headers=auth_headers
         )
 
         assert response.status_code == 200
@@ -93,7 +93,7 @@ class TestGetUser:
     ):
         # Route returns APIResponse.error() (HTTP 200) when the user doesn't exist
         response = await client.get(
-            "/api/v1/users/999999", headers=auth_headers
+            "/api/v1/admin/users/999999", headers=auth_headers
         )
 
         assert response.status_code == 200
@@ -112,7 +112,7 @@ class TestCreateUser:
         self, client: AsyncClient, test_user: User, auth_headers: dict
     ):
         response = await client.post(
-            "/api/v1/users",
+            "/api/v1/admin/users",
             json={
                 "name": "New User",
                 "email": "newuser@example.com",
@@ -130,7 +130,7 @@ class TestCreateUser:
         self, client: AsyncClient, test_user: User, auth_headers: dict
     ):
         response = await client.post(
-            "/api/v1/users",
+            "/api/v1/admin/users",
             json={
                 "name": "Duplicate",
                 "email": "test@example.com",  # already exists
@@ -145,7 +145,7 @@ class TestCreateUser:
 
     async def test_create_user_unauthenticated(self, client: AsyncClient):
         response = await client.post(
-            "/api/v1/users",
+            "/api/v1/admin/users",
             json={
                 "name": "Ghost",
                 "email": "ghost@example.com",
@@ -166,7 +166,7 @@ class TestUpdateUser:
         self, client: AsyncClient, second_user: User, auth_headers: dict
     ):
         response = await client.put(
-            f"/api/v1/users/{second_user.id}",
+            f"/api/v1/admin/users/{second_user.id}",
             json={"name": "Updated Name"},
             headers=auth_headers,
         )
@@ -180,7 +180,7 @@ class TestUpdateUser:
         self, client: AsyncClient, test_user: User, auth_headers: dict
     ):
         response = await client.put(
-            "/api/v1/users/999999",
+            "/api/v1/admin/users/999999",
             json={"name": "Ghost"},
             headers=auth_headers,
         )
@@ -197,7 +197,7 @@ class TestUpdateUser:
         auth_headers: dict,
     ):
         response = await client.put(
-            f"/api/v1/users/{second_user.id}",
+            f"/api/v1/admin/users/{second_user.id}",
             json={"email": "test@example.com"},  # taken by test_user
             headers=auth_headers,
         )
@@ -215,7 +215,7 @@ class TestDeleteUser:
         self, client: AsyncClient, second_user: User, auth_headers: dict
     ):
         response = await client.delete(
-            f"/api/v1/users/{second_user.id}", headers=auth_headers
+            f"/api/v1/admin/users/{second_user.id}", headers=auth_headers
         )
 
         assert response.status_code == 200
@@ -225,7 +225,7 @@ class TestDeleteUser:
         self, client: AsyncClient, test_user: User, auth_headers: dict
     ):
         response = await client.delete(
-            "/api/v1/users/999999", headers=auth_headers
+            "/api/v1/admin/users/999999", headers=auth_headers
         )
 
         assert response.status_code == 404
@@ -235,6 +235,6 @@ class TestDeleteUser:
     async def test_delete_user_unauthenticated(
         self, client: AsyncClient, second_user: User
     ):
-        response = await client.delete(f"/api/v1/users/{second_user.id}")
+        response = await client.delete(f"/api/v1/admin/users/{second_user.id}")
 
         assert response.status_code == 403

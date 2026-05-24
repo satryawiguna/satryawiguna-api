@@ -28,7 +28,7 @@ class SkillService:
         sort_by: str = "sort_order",
         sort_order: str = "ASC",
         keyword: Optional[str] = None,
-        category: Optional[str] = None,
+        category_id: Optional[int] = None,
     ) -> PaginatedResult:
         return await self.skill_repository.get_paginated(
             page=page,
@@ -36,7 +36,7 @@ class SkillService:
             sort_by=sort_by,
             sort_order=sort_order,
             keyword=keyword,
-            category=category,
+            category_id=category_id,
         )
 
     async def create_skill(self, skill_data: SkillCreate) -> Skill:

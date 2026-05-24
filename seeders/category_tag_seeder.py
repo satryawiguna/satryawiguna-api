@@ -8,12 +8,23 @@ from app.models.blog import Category, Tag
 def seed_categories(db: Session):
     """Seed categories table"""
     categories_data = [
-        {"name": "Technology", "slug": "technology"},
-        {"name": "Programming", "slug": "programming"},
-        {"name": "Web Development", "slug": "web-development"},
-        {"name": "Mobile Development", "slug": "mobile-development"},
-        {"name": "DevOps", "slug": "devops"},
-        {"name": "Tutorial", "slug": "tutorial"},
+        # BLOG_POST categories
+        {"name": "Technology", "slug": "technology", "type": "BLOG_POST"},
+        {"name": "Programming", "slug": "programming", "type": "BLOG_POST"},
+        {"name": "Web Development", "slug": "web-development", "type": "BLOG_POST"},
+        {"name": "Mobile Development", "slug": "mobile-development", "type": "BLOG_POST"},
+        {"name": "DevOps", "slug": "devops", "type": "BLOG_POST"},
+        {"name": "Tutorial", "slug": "tutorial", "type": "BLOG_POST"},
+        # PROJECT categories
+        {"name": "Full Stack", "slug": "full-stack", "type": "PROJECT"},
+        {"name": "Frontend", "slug": "frontend", "type": "PROJECT"},
+        {"name": "Backend", "slug": "backend", "type": "PROJECT"},
+        {"name": "Mobile App", "slug": "mobile-app", "type": "PROJECT"},
+        # SKILL categories
+        {"name": "Backend", "slug": "backend-skill", "type": "SKILL"},
+        {"name": "Frontend", "slug": "frontend-skill", "type": "SKILL"},
+        {"name": "DevOps", "slug": "devops-skill", "type": "SKILL"},
+        {"name": "Database", "slug": "database", "type": "SKILL"},
     ]
     
     for category_data in categories_data:

@@ -33,6 +33,8 @@ _USER_EXAMPLE = {
     "id": 1,
     "name": "Admin User",
     "email": "admin@satryawiguna.me",
+    "phone": "293789723",
+    "avatar_url": "https://example.com/avatar.jpg",
     "isActive": True,
     "roles": [{"id": 1, "name": "Admin"}],
 }

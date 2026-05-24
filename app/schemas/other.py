@@ -1,17 +1,17 @@
 """
-Other schemas (Skill, Testimonial, Media, Setting)
+Other schemas (Skill, Media, Setting)
 """
-from pydantic import BaseModel, Field, EmailStr
-from typing import Optional
+from pydantic import BaseModel, Field, field_validator
+from typing import Optional, List
 from datetime import datetime
 
 
 class SkillBase(BaseModel):
     """Base skill schema"""
     name: str = Field(..., min_length=1, max_length=255)
-    category: Optional[str] = Field(None, max_length=255)
+    category_id: Optional[int] = None
     level: Optional[int] = Field(None, ge=0, le=100)
-    icon: Optional[str] = Field(None, max_length=255)
+    icon_url: Optional[str] = Field(None, max_length=500)
     sort_order: int = 0
 
 
@@ -23,50 +23,33 @@ class SkillCreate(SkillBase):
 class SkillUpdate(BaseModel):
     """Schema for updating a skill"""
     name: Optional[str] = Field(None, min_length=1, max_length=255)
-    category: Optional[str] = Field(None, max_length=255)
+    category_id: Optional[int] = None
     level: Optional[int] = Field(None, ge=0, le=100)
-    icon: Optional[str] = Field(None, max_length=255)
+    icon_url: Optional[str] = Field(None, max_length=500)
     sort_order: Optional[int] = None
 
 
-class SkillResponse(SkillBase):
-    """Schema for skill response"""
+class SkillCategoryResponse(BaseModel):
+    """Schema for the category nested within a skill response"""
     id: int
-    
+    name: str
+    slug: str
+    type: str
+
     class Config:
         from_attributes = True
 
 
-class TestimonialBase(BaseModel):
-    """Base testimonial schema"""
-    name: str = Field(..., min_length=1, max_length=255)
-    position: Optional[str] = Field(None, max_length=255)
-    company: Optional[str] = Field(None, max_length=255)
-    content: str = Field(..., min_length=1)
-    avatar_url: Optional[str] = None
-    featured: bool = False
-
-
-class TestimonialCreate(TestimonialBase):
-    """Schema for creating a testimonial"""
-    pass
-
-
-class TestimonialUpdate(BaseModel):
-    """Schema for updating a testimonial"""
-    name: Optional[str] = Field(None, min_length=1, max_length=255)
-    position: Optional[str] = Field(None, max_length=255)
-    company: Optional[str] = Field(None, max_length=255)
-    content: Optional[str] = Field(None, min_length=1)
-    avatar_url: Optional[str] = None
-    featured: Optional[bool] = None
-
-
-class TestimonialResponse(TestimonialBase):
-    """Schema for testimonial response"""
+class SkillResponse(BaseModel):
+    """Schema for skill response"""
     id: int
-    created_at: datetime
-    
+    name: str
+    category_id: Optional[int] = None
+    level: Optional[int] = None
+    icon_url: Optional[str] = None
+    sort_order: int = 0
+    category: Optional[SkillCategoryResponse] = None
+
     class Config:
         from_attributes = True
 
@@ -77,6 +60,7 @@ class MediaBase(BaseModel):
     file_path: str = Field(..., min_length=1, max_length=500)
     mime_type: Optional[str] = Field(None, max_length=100)
     size: Optional[int] = None
+
 
 
 class MediaCreate(MediaBase):

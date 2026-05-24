@@ -112,21 +112,12 @@ class MediaService:
         )
 
     async def delete_media(self, media_id: str) -> bool:
-        """Delete a media record. The file on Spaces is not deleted for safety."""
+        """Delete a media record and its corresponding file from DigitalOcean Spaces."""
         media = await self.media_repository.get_by_id(media_id)
         if not media:
             raise NotFoundError("Media not found")
 
-        # Note: We keep the file on Spaces to avoid accidental data loss.
-        # If you need to also delete from Spaces, uncomment the block below:
-        # try:
-        #     from app.core.config import settings
-        #     object_key = media.file_path.replace(f"{settings.SPACES_ORIGIN_ENDPOINT}/", "")
-        #     spaces_uploader.client.delete_object(
-        #         Bucket=settings.SPACES_BUCKET_NAME,
-        #         Key=object_key,
-        #     )
-        # except Exception:
-        #     pass  # Log the error but proceed with DB deletion
+        # Delete the file from DigitalOcean Spaces
+        spaces_uploader.delete(media.file_path)
 
         return await self.media_repository.delete(media_id)

@@ -1,8 +1,7 @@
 """
-Tests for skill endpoints: /api/v1/skills/*
+Tests for skill endpoints: /api/v1/admin/skills/*
 
-Public endpoints (GET) do not require authentication.
-Write endpoints (POST / PUT / DELETE) require authentication.
+All endpoints require authentication except GET.
 
 Not-found behaviour:
 - GET by ID returns HTTP 200 with {"success": false, "status": 404} (route-level guard)
@@ -22,9 +21,9 @@ from app.models.user import User
 
 _SKILL_PAYLOAD = {
     "name": "Python",
-    "category": "Backend",
+    "category_id": None,
     "level": 90,
-    "icon": "python",
+    "icon_url": "https://example.com/icons/python.svg",
     "sort_order": 1,
 }
 
@@ -36,7 +35,7 @@ _SKILL_PAYLOAD = {
 
 @pytest.fixture()
 async def skill(db: AsyncSession) -> Skill:
-    s = Skill(name="FastAPI", category="Backend", level=85, sort_order=1)
+    s = Skill(name="FastAPI", category_id=None, level=85, sort_order=1)
     db.add(s)
     await db.commit()
     await db.refresh(s)
@@ -50,7 +49,7 @@ async def skill(db: AsyncSession) -> Skill:
 
 class TestGetSkills:
     async def test_get_skills_success(self, client: AsyncClient, skill: Skill):
-        response = await client.get("/api/v1/skills")
+        response = await client.get("/api/v1/admin/skills")
 
         assert response.status_code == 200
         body = response.json()
@@ -61,13 +60,13 @@ class TestGetSkills:
     async def test_get_skills_returns_pagination_meta(
         self, client: AsyncClient, skill: Skill
     ):
-        response = await client.get("/api/v1/skills", params={"limit": 10})
+        response = await client.get("/api/v1/admin/skills", params={"limit": 10})
 
         assert response.status_code == 200
         assert "pagination" in response.json()
 
     async def test_get_skills_no_auth_required(self, client: AsyncClient):
-        response = await client.get("/api/v1/skills")
+        response = await client.get("/api/v1/admin/skills")
 
         assert response.status_code == 200
 
@@ -81,7 +80,7 @@ class TestGetSkill:
     async def test_get_skill_by_id_success(
         self, client: AsyncClient, skill: Skill
     ):
-        response = await client.get(f"/api/v1/skills/{skill.id}")
+        response = await client.get(f"/api/v1/admin/skills/{skill.id}")
 
         assert response.status_code == 200
         body = response.json()
@@ -91,7 +90,7 @@ class TestGetSkill:
 
     async def test_get_skill_by_id_not_found(self, client: AsyncClient):
         # Route returns APIResponse.error() (HTTP 200) when not found
-        response = await client.get("/api/v1/skills/999999")
+        response = await client.get("/api/v1/admin/skills/999999")
 
         assert response.status_code == 200
         body = response.json()
@@ -109,7 +108,7 @@ class TestCreateSkill:
         self, client: AsyncClient, test_user: User, auth_headers: dict
     ):
         response = await client.post(
-            "/api/v1/skills", json=_SKILL_PAYLOAD, headers=auth_headers
+            "/api/v1/admin/skills", json=_SKILL_PAYLOAD, headers=auth_headers
         )
 
         assert response.status_code == 201
@@ -119,7 +118,7 @@ class TestCreateSkill:
         assert body["data"]["level"] == 90
 
     async def test_create_skill_unauthenticated(self, client: AsyncClient):
-        response = await client.post("/api/v1/skills", json=_SKILL_PAYLOAD)
+        response = await client.post("/api/v1/admin/skills", json=_SKILL_PAYLOAD)
 
         assert response.status_code == 403
 
@@ -137,7 +136,7 @@ class TestUpdateSkill:
         auth_headers: dict,
     ):
         response = await client.put(
-            f"/api/v1/skills/{skill.id}",
+            f"/api/v1/admin/skills/{skill.id}",
             json={"level": 95},
             headers=auth_headers,
         )
@@ -151,7 +150,7 @@ class TestUpdateSkill:
         self, client: AsyncClient, auth_headers: dict
     ):
         response = await client.put(
-            "/api/v1/skills/999999",
+            "/api/v1/admin/skills/999999",
             json={"level": 50},
             headers=auth_headers,
         )
@@ -163,7 +162,7 @@ class TestUpdateSkill:
         self, client: AsyncClient, skill: Skill
     ):
         response = await client.put(
-            f"/api/v1/skills/{skill.id}", json={"level": 50}
+            f"/api/v1/admin/skills/{skill.id}", json={"level": 50}
         )
 
         assert response.status_code == 403
@@ -182,7 +181,7 @@ class TestDeleteSkill:
         auth_headers: dict,
     ):
         response = await client.delete(
-            f"/api/v1/skills/{skill.id}", headers=auth_headers
+            f"/api/v1/admin/skills/{skill.id}", headers=auth_headers
         )
 
         assert response.status_code == 200
@@ -192,7 +191,7 @@ class TestDeleteSkill:
         self, client: AsyncClient, auth_headers: dict
     ):
         response = await client.delete(
-            "/api/v1/skills/999999", headers=auth_headers
+            "/api/v1/admin/skills/999999", headers=auth_headers
         )
 
         assert response.status_code == 404
@@ -201,6 +200,6 @@ class TestDeleteSkill:
     async def test_delete_skill_unauthenticated(
         self, client: AsyncClient, skill: Skill
     ):
-        response = await client.delete(f"/api/v1/skills/{skill.id}")
+        response = await client.delete(f"/api/v1/admin/skills/{skill.id}")
 
         assert response.status_code == 403

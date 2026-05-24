@@ -84,6 +84,30 @@ class SpacesUploader:
         public_url = f"{settings.SPACES_ORIGIN_ENDPOINT}/{object_key}"
         return public_url, unique_filename
 
+    def delete(self, file_path: str) -> bool:
+        """
+        Delete a file from DigitalOcean Spaces.
+
+        Args:
+            file_path: The full public URL or object key of the file to delete.
+
+        Returns:
+            True if the file was deleted (or didn't exist), False on unexpected error.
+        """
+        # Extract object key from the public URL
+        object_key = file_path.replace(f"{settings.SPACES_ORIGIN_ENDPOINT}/", "")
+
+        try:
+            self.client.delete_object(
+                Bucket=settings.SPACES_BUCKET_NAME,
+                Key=object_key,
+            )
+            return True
+        except ClientError as exc:
+            # Log and swallow – don't block DB deletion if Spaces fails
+            print(f"[WARNING] Failed to delete file from Spaces: {object_key} – {exc}")
+            return False
+
 
 # Singleton instance for reuse
 spaces_uploader = SpacesUploader()

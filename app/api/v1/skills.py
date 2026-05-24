@@ -28,11 +28,12 @@ SKILLS_LIST_EXAMPLES = {
             "data": [
                 {
                     "name": "Python",
-                    "category": "Backend",
+                    "category_id": 1,
                     "level": 90,
-                    "icon": "python",
+                    "icon_url": "https://example.com/icons/python.svg",
                     "sort_order": 1,
-                    "id": 1
+                    "id": 1,
+                    "category": {"id": 1, "name": "Backend", "slug": "backend", "type": "SKILL"}
                 }
             ],
             "pagination": {
@@ -56,11 +57,12 @@ SKILLS_LIST_EXAMPLES = {
             "data": [
                 {
                     "name": "Python",
-                    "category": "Backend",
+                    "category_id": 1,
                     "level": 90,
-                    "icon": "python",
+                    "icon_url": "https://example.com/icons/python.svg",
                     "sort_order": 1,
-                    "id": 1
+                    "id": 1,
+                    "category": {"id": 1, "name": "Backend", "slug": "backend", "type": "SKILL"}
                 }
             ],
             "timestamp": "2026-03-16T00:00:00.000Z"
@@ -79,8 +81,8 @@ SKILLS_LIST_EXAMPLES = {
     - Without pagination: Set `limit` to `null` to get all skills
 
     **Filters:**
-    - `keyword`: Search in name or category
-    - `category`: Filter by exact category value
+    - `keyword`: Search in name
+    - `category`: Filter by category ID
     - `sortBy`: Field to sort by (default: sort_order)
     - `sortOrder`: ASC or DESC (default: ASC)
     """,
@@ -100,8 +102,8 @@ async def get_skills(
     limit: Optional[int] = Query(10, ge=1, le=100, description="Items per page. Set to null for all skills without pagination"),
     sortBy: str = Query("sort_order", description="Sort field"),
     sortOrder: str = Query("ASC", description="Sort order (ASC or DESC)"),
-    keyword: Optional[str] = Query(None, description="Search keyword for name or category"),
-    category: Optional[str] = Query(None, description="Filter by category"),
+    keyword: Optional[str] = Query(None, description="Search keyword for name"),
+    category_id: Optional[int] = Query(None, description="Filter by category ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -116,7 +118,7 @@ async def get_skills(
         sort_by=sortBy,
         sort_order=sortOrder,
         keyword=keyword,
-        category=category,
+        category_id=category_id,
     )
 
     skills_data = [SkillResponse.from_orm(skill).model_dump() for skill in result.items]

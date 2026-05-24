@@ -411,7 +411,7 @@ List endpoints support both paginated and non-paginated responses:
 **With Pagination (default):**
 
 ```
-GET /api/v1/users?page=1&limit=10
+GET /api/v1/admin/users?page=1&limit=10
 ```
 
 Response includes `pagination` metadata:
@@ -438,7 +438,7 @@ Response includes `pagination` metadata:
 Set `limit` to `null` or omit it to get all records:
 
 ```
-GET /api/v1/users?limit=null
+GET /api/v1/admin/users?limit=null
 ```
 
 Response without pagination metadata:

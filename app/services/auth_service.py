@@ -158,37 +158,44 @@ class AuthService:
     async def send_2fa_otp(self, email: str) -> bool:
         """
         Generate and send OTP to user's email for 2FA login.
-        
+        Only sends the email if the user's email is verified.
+
         Args:
             email: User's email address
-            
+
         Returns:
             True if OTP was generated and sent successfully
-            
+
         Raises:
-            AuthenticationError: If user not found or inactive
+            AuthenticationError: If user not found, inactive, or email not verified
         """
         user = await self.user_repository.get_by_email(email)
-        
+
         if not user:
             raise AuthenticationError("User not found")
-        
+
         if not user.is_active:
             raise AuthenticationError("User account is inactive")
-        
+
+        # Check email verification — only send OTP if email is verified
+        if not user.email_verified_at:
+            raise AuthenticationError(
+                "Email not verified. Please verify your email before requesting OTP."
+            )
+
         # Generate 6-digit OTP
         otp = generate_otp(6)
-        
+
         # Store OTP in user table
         user.otp = otp
         await self.user_repository.update(user)
-        
+
         # Send OTP via email
         email_sent = await send_otp_email(email, otp)
-        
+
         if not email_sent:
             raise BusinessLogicError("Failed to send OTP email")
-        
+
         return True
     
     async def verify_2fa_otp(self, email: str, otp: str) -> User:
@@ -239,6 +246,8 @@ class AuthService:
             id=user.id,
             name=user.name,
             email=user.email,
+            phone=user.phone,
+            avatar_url=user.avatar_url,
             isActive=user.is_active,
             roles=roles,
         )

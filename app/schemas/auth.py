@@ -20,6 +20,8 @@ class UserWithRolesResponse(BaseModel):
     id: int
     name: str
     email: str
+    phone: Optional[str] = None
+    avatar_url: Optional[str] = None
     isActive: bool
     roles: List[RoleResponse]
     

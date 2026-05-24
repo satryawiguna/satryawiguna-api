@@ -46,6 +46,14 @@ class Settings(BaseSettings):
     SPACES_REGION: str = "sgp1"
     SPACES_ENDPOINT_URL: str = "https://sgp1.digitaloceanspaces.com"
     SPACES_ORIGIN_ENDPOINT: str = "https://satryawiguna-bucket.sgp1.digitaloceanspaces.com"
+
+    # Brevo SMTP
+    SMTP_HOST: str = "smtp-relay.brevo.com"
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = "noreply@satryawiguna.me"
+    SMTP_FROM_NAME: str = "Satrya Wiguna"
     
     @property
     def SPACES_UPLOAD_FOLDER(self) -> str:

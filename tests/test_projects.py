@@ -1,5 +1,5 @@
 """
-Tests for project endpoints: /api/v1/projects/*
+Tests for project endpoints: /api/v1/admin/projects/*
 
 Public endpoints (GET) do not require authentication.
 Write endpoints (POST / PUT / DELETE) require authentication.
@@ -23,8 +23,8 @@ from app.models.user import User
 _PROJECT_PAYLOAD = {
     "title": "My Project",
     "slug": "my-project",
+    "sub_title": "A sample subtitle",
     "description": "A sample project",
-    "featured": False,
 }
 
 
@@ -39,7 +39,6 @@ async def project(db: AsyncSession) -> Project:
         title="Existing Project",
         slug="existing-project",
         description="Already in the DB",
-        featured=False,
     )
     db.add(p)
     await db.commit()
@@ -56,7 +55,7 @@ class TestGetProjects:
     async def test_get_projects_success(
         self, client: AsyncClient, project: Project
     ):
-        response = await client.get("/api/v1/projects")
+        response = await client.get("/api/v1/admin/projects")
 
         assert response.status_code == 200
         body = response.json()
@@ -67,13 +66,13 @@ class TestGetProjects:
     async def test_get_projects_returns_pagination_meta(
         self, client: AsyncClient, project: Project
     ):
-        response = await client.get("/api/v1/projects", params={"limit": 10})
+        response = await client.get("/api/v1/admin/projects", params={"limit": 10})
 
         assert response.status_code == 200
         assert "pagination" in response.json()
 
     async def test_get_projects_no_auth_required(self, client: AsyncClient):
-        response = await client.get("/api/v1/projects")
+        response = await client.get("/api/v1/admin/projects")
 
         assert response.status_code == 200
 
@@ -87,7 +86,7 @@ class TestGetProject:
     async def test_get_project_by_id_success(
         self, client: AsyncClient, project: Project
     ):
-        response = await client.get(f"/api/v1/projects/{project.id}")
+        response = await client.get(f"/api/v1/admin/projects/{project.id}")
 
         assert response.status_code == 200
         body = response.json()
@@ -97,7 +96,7 @@ class TestGetProject:
 
     async def test_get_project_by_id_not_found(self, client: AsyncClient):
         # Route returns APIResponse.error() (HTTP 200) when not found
-        response = await client.get("/api/v1/projects/999999")
+        response = await client.get("/api/v1/admin/projects/999999")
 
         assert response.status_code == 200
         body = response.json()
@@ -115,7 +114,7 @@ class TestCreateProject:
         self, client: AsyncClient, test_user: User, auth_headers: dict
     ):
         response = await client.post(
-            "/api/v1/projects", json=_PROJECT_PAYLOAD, headers=auth_headers
+            "/api/v1/admin/projects", json=_PROJECT_PAYLOAD, headers=auth_headers
         )
 
         assert response.status_code == 201
@@ -130,7 +129,7 @@ class TestCreateProject:
         auth_headers: dict,
     ):
         response = await client.post(
-            "/api/v1/projects",
+            "/api/v1/admin/projects",
             json={
                 "title": "Another Project",
                 "slug": "existing-project",  # duplicate
@@ -142,7 +141,7 @@ class TestCreateProject:
         assert response.json()["success"] is False
 
     async def test_create_project_unauthenticated(self, client: AsyncClient):
-        response = await client.post("/api/v1/projects", json=_PROJECT_PAYLOAD)
+        response = await client.post("/api/v1/admin/projects", json=_PROJECT_PAYLOAD)
 
         assert response.status_code == 403
 
@@ -160,8 +159,8 @@ class TestUpdateProject:
         auth_headers: dict,
     ):
         response = await client.put(
-            f"/api/v1/projects/{project.id}",
-            json={"title": "Updated Title", "featured": True},
+            f"/api/v1/admin/projects/{project.id}",
+            json={"title": "Updated Title", "sub_title": "Updated subtitle"},
             headers=auth_headers,
         )
 
@@ -174,7 +173,7 @@ class TestUpdateProject:
         self, client: AsyncClient, auth_headers: dict
     ):
         response = await client.put(
-            "/api/v1/projects/999999",
+            "/api/v1/admin/projects/999999",
             json={"title": "Ghost"},
             headers=auth_headers,
         )
@@ -195,7 +194,7 @@ class TestUpdateProject:
         await db.refresh(other)
 
         response = await client.put(
-            f"/api/v1/projects/{other.id}",
+            f"/api/v1/admin/projects/{other.id}",
             json={"slug": "existing-project"},  # taken by `project`
             headers=auth_headers,
         )
@@ -216,7 +215,7 @@ class TestDeleteProject:
         auth_headers: dict,
     ):
         response = await client.delete(
-            f"/api/v1/projects/{project.id}", headers=auth_headers
+            f"/api/v1/admin/projects/{project.id}", headers=auth_headers
         )
 
         assert response.status_code == 200
@@ -226,7 +225,7 @@ class TestDeleteProject:
         self, client: AsyncClient, auth_headers: dict
     ):
         response = await client.delete(
-            "/api/v1/projects/999999", headers=auth_headers
+            "/api/v1/admin/projects/999999", headers=auth_headers
         )
 
         assert response.status_code == 404
@@ -235,6 +234,6 @@ class TestDeleteProject:
     async def test_delete_project_unauthenticated(
         self, client: AsyncClient, project: Project
     ):
-        response = await client.delete(f"/api/v1/projects/{project.id}")
+        response = await client.delete(f"/api/v1/admin/projects/{project.id}")
 
         assert response.status_code == 403

@@ -300,8 +300,7 @@ async def delete_media(
     """
     Delete a media item by its UUID. Requires authentication.
 
-    **Note:** This only removes the database record. The file on object storage
-    is preserved to prevent accidental data loss.
+    This removes both the database record AND the file from DigitalOcean Spaces.
     """
     service = MediaService(db)
     await service.delete_media(media_id)
