@@ -1,44 +1,29 @@
 name: Deploy to Production
 
-# Manual trigger only — must supply the same SHA tag that was verified on dev
+# Manual trigger — promotes the current :dev image to :latest and deploys
 on:
     workflow_dispatch:
-        inputs:
-            image_tag:
-                description: "Verified image tag to promote (e.g. sha-a1b2c3d) — must have passed dev verification"
-                required: true
-                type: string
-
-env:
-    IMAGE_REPO: ${{ secrets.DOCKERHUB_USERNAME }}/satryawiguna-api
 
 jobs:
     promote-and-deploy:
-        name: Promote :${{ inputs.image_tag }} → :latest → Prod Server (:8002)
+        name: Promote :dev → :latest → Prod Server (:8002)
         runs-on: ubuntu-latest
-        environment: production # ← Requires approval if "Required reviewers" is set in GitHub Environments
+        environment: production
 
         steps:
-            - name: Log in to Docker Hub (runner)
+            - name: Log in to Docker Hub
               uses: docker/login-action@v3
               with:
                   username: ${{ secrets.DOCKERHUB_USERNAME }}
                   password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-            # Pull the exact same image that was deployed to dev (immutable SHA tag)
-            # then promote it to :latest so the prod server only needs to pull :latest
-            - name: Promote SHA tag → :latest
+            - name: Promote :dev → :latest
+              env:
+                  IMAGE_REPO: ${{ secrets.DOCKERHUB_USERNAME }}/satryawiguna-api
               run: |
-                  echo "📦 Pulling $IMAGE_REPO:${{ inputs.image_tag }}..."
-                  docker pull "$IMAGE_REPO:${{ inputs.image_tag }}"
-
-                  echo "🏷️  Tagging as :latest..."
-                  docker tag "$IMAGE_REPO:${{ inputs.image_tag }}" "$IMAGE_REPO:latest"
-
-                  echo "📤 Pushing :latest to Docker Hub..."
+                  docker pull "$IMAGE_REPO:dev"
+                  docker tag "$IMAGE_REPO:dev" "$IMAGE_REPO:latest"
                   docker push "$IMAGE_REPO:latest"
-
-                  echo "✅ $IMAGE_REPO:${{ inputs.image_tag }} promoted to :latest"
 
             - name: Deploy to prod server via SSH
               uses: appleboy/ssh-action@v1.0.3
@@ -46,42 +31,18 @@ jobs:
                   DH_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
                   DH_USER: ${{ secrets.DOCKERHUB_USERNAME }}
                   IMAGE_REPO: ${{ secrets.DOCKERHUB_USERNAME }}/satryawiguna-api
-                  IMAGE_TAG: ${{ inputs.image_tag }}
                   APP_DIR: ${{ secrets.PROD_SSH_APP_DIR }}
               with:
                   host: ${{ secrets.PROD_SSH_HOST }}
                   username: ${{ secrets.PROD_SSH_USER }}
                   key: ${{ secrets.PROD_SSH_KEY }}
-                  envs: DH_TOKEN,DH_USER,IMAGE_REPO,IMAGE_TAG,APP_DIR
+                  envs: DH_TOKEN,DH_USER,IMAGE_REPO,APP_DIR
                   script: |
                       set -e
-
-                      echo "🔐 Logging in to Docker Hub..."
                       echo "$DH_TOKEN" | docker login -u "$DH_USER" --password-stdin
-
-                      echo "📦 Pulling image: $IMAGE_REPO:latest (promoted from $IMAGE_TAG)"
                       docker pull "$IMAGE_REPO:latest"
-
-                      echo "🏷️  Retagging → satryawiguna_api:prod"
                       docker tag "$IMAGE_REPO:latest" satryawiguna_api:prod
-
-                      echo "🚀 Restarting prod API container..."
                       cd "$APP_DIR"
                       docker compose -f docker-compose.prod.yml up -d --no-build
-
-                      echo "🧹 Removing dangling images..."
                       docker image prune -f
-
-                      echo "✅ Production deployment complete — $IMAGE_REPO:$IMAGE_TAG is live on :8002"
-
-            - name: Write job summary
-              if: success()
-              run: |
-                  echo "## ✅ Production Deployment Successful" >> "$GITHUB_STEP_SUMMARY"
-                  echo "" >> "$GITHUB_STEP_SUMMARY"
-                  echo "| | |" >> "$GITHUB_STEP_SUMMARY"
-                  echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
-                  echo "| **Image deployed** | \`${{ env.IMAGE_REPO }}:${{ inputs.image_tag }}\` |" >> "$GITHUB_STEP_SUMMARY"
-                  echo "| **Promoted to** | \`${{ env.IMAGE_REPO }}:latest\` |" >> "$GITHUB_STEP_SUMMARY"
-                  echo "| **Server** | Production (:8002) |" >> "$GITHUB_STEP_SUMMARY"
-                  echo "| **Triggered by** | @${{ github.actor }} |" >> "$GITHUB_STEP_SUMMARY"
+                      echo "Production deployment complete"
