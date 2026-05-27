@@ -1,3 +1,5 @@
+# Deploy to Development Workflow
+# Auto-triggers on successful Build workflow for rc/* branches, or can be run manually for re-deploys (no inputs needed)
 name: Deploy to Development
 
 # Auto-triggers when the Build workflow completes successfully on rc/*
