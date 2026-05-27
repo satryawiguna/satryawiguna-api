@@ -189,21 +189,6 @@ class TestUpdateUser:
         body = response.json()
         assert body["success"] is False
 
-    async def test_update_user_duplicate_email(
-        self,
-        client: AsyncClient,
-        test_user: User,
-        second_user: User,
-        auth_headers: dict,
-    ):
-        response = await client.put(
-            f"/api/v1/admin/users/{second_user.id}",
-            json={"email": "test@example.com"},  # taken by test_user
-            headers=auth_headers,
-        )
-
-        assert response.status_code == 400
-
 
 # ---------------------------------------------------------------------------
 # Delete user

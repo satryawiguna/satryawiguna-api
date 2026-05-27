@@ -1,0 +1,18 @@
+# Ruff linter configuration
+# Docs: https://docs.astral.sh/ruff/configuration/
+
+line-length = 120
+
+[lint]
+# E = pycodestyle errors, F = pyflakes (real code issues)
+select = ["E", "F"]
+ignore = [
+    "E501",  # line too long — enforcing length is a formatter concern
+    "F401",  # imported but unused — common in __init__.py re-exports
+]
+
+[lint.per-file-ignores]
+# os.environ.setdefault() must run before app imports
+"conftest.py" = ["E402"]
+# __init__.py files re-export symbols; F401/F403 are expected
+"**/__init__.py" = ["F401", "F403"]
