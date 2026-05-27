@@ -10,8 +10,6 @@
 # Stop:    docker compose -f docker-compose.dev.yml down
 # ─────────────────────────────────────────────────────────────────────────────
 
-version: "3.9"
-
 networks:
   satryawiguna_network:
     external: true

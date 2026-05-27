@@ -14,12 +14,9 @@
 #   Prod DB → login with root    / MYSQL_ROOT_PASSWORD
 # ─────────────────────────────────────────────────────────────────────────────
 
-version: "3.9"
-
 networks:
   satryawiguna_network:
-    name: satryawiguna_network
-    driver: bridge
+    external: true
 
 volumes:
   mysql_data:
