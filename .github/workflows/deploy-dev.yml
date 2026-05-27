@@ -1,4 +1,4 @@
-name: Deploy to Dev
+name: Deploy to Development
 
 # Auto-triggers when the Build workflow completes successfully on rc/*
 # Can also be run manually for re-deploys (no inputs needed)
@@ -35,6 +35,7 @@ jobs:
                   script: |
                       set -e
                       echo "$DH_TOKEN" | docker login -u "$DH_USER" --password-stdin
+                      docker network create satryawiguna_network 2>/dev/null || true
                       docker pull "$IMAGE_REPO:dev"
                       docker tag "$IMAGE_REPO:dev" satryawiguna_api:dev
                       cd "$APP_DIR"
