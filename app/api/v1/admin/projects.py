@@ -117,7 +117,6 @@ async def get_projects(
     category_id: Optional[int] = Query(None, description="Filter by category ID"),
     skill_id: Optional[int] = Query(None, description="Filter by skill ID"),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
     service = ProjectService(db)
     result = await service.get_projects(

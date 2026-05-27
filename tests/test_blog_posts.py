@@ -253,6 +253,6 @@ class TestDeleteBlogPost:
     async def test_delete_blog_post_unauthenticated(
         self, client: AsyncClient, blog_post: BlogPost
     ):
-        response = await client.delete(f"/api/v1/blog-posts/{blog_post.id}")
+        response = await client.delete(f"/api/v1/admin/blog-posts/{blog_post.id}")
 
         assert response.status_code == 403

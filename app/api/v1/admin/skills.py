@@ -74,7 +74,6 @@ async def get_skills(
     keyword: Optional[str] = Query(None),
     category_id: Optional[int] = Query(None, description="Filter by category ID"),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
     service = SkillService(db)
     result = await service.get_skills(
@@ -119,7 +118,6 @@ async def get_skills(
 async def get_skill(
     skill_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
     service = SkillService(db)
     skill = await service.get_skill_by_id(skill_id)

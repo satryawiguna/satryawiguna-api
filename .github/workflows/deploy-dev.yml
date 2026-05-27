@@ -1,0 +1,68 @@
+name: Deploy to Development
+
+# Manual trigger only — run after build-push succeeds and you know the SHA tag
+on:
+    workflow_dispatch:
+        inputs:
+            image_tag:
+                description: "Immutable image tag to deploy (e.g. sha-a1b2c3d) — copy from build-push job summary"
+                required: true
+                type: string
+
+env:
+    IMAGE_REPO: ${{ secrets.DOCKERHUB_USERNAME }}/satryawiguna-api
+
+jobs:
+    deploy-dev:
+        name: Deploy :${{ inputs.image_tag }} → Dev Server (:8001)
+        runs-on: ubuntu-latest
+        environment: development # Creates a deployment record in GitHub UI
+
+        steps:
+            - name: Deploy to dev server via SSH
+              uses: appleboy/ssh-action@v1.0.3
+              env:
+                  DH_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+                  DH_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+                  IMAGE_REPO: ${{ secrets.DOCKERHUB_USERNAME }}/satryawiguna-api
+                  IMAGE_TAG: ${{ inputs.image_tag }}
+                  APP_DIR: ${{ secrets.DEV_SSH_APP_DIR }}
+              with:
+                  host: ${{ secrets.DEV_SSH_HOST }}
+                  username: ${{ secrets.DEV_SSH_USER }}
+                  key: ${{ secrets.DEV_SSH_KEY }}
+                  # Forward the env vars above into the remote shell session
+                  envs: DH_TOKEN,DH_USER,IMAGE_REPO,IMAGE_TAG,APP_DIR
+                  script: |
+                      set -e
+
+                      echo "🔐 Logging in to Docker Hub..."
+                      echo "$DH_TOKEN" | docker login -u "$DH_USER" --password-stdin
+
+                      echo "📦 Pulling image: $IMAGE_REPO:$IMAGE_TAG"
+                      docker pull "$IMAGE_REPO:$IMAGE_TAG"
+
+                      echo "🏷️  Retagging → satryawiguna_api:dev"
+                      docker tag "$IMAGE_REPO:$IMAGE_TAG" satryawiguna_api:dev
+
+                      echo "🚀 Restarting dev API container..."
+                      cd "$APP_DIR"
+                      docker compose -f docker-compose.dev.yml up -d --no-build
+
+                      echo "🧹 Removing dangling images..."
+                      docker image prune -f
+
+                      echo "✅ Dev deployment complete — $IMAGE_REPO:$IMAGE_TAG is live on :8001"
+
+            - name: Write job summary
+              if: success()
+              run: |
+                  echo "## ✅ Dev Deployment Successful" >> "$GITHUB_STEP_SUMMARY"
+                  echo "" >> "$GITHUB_STEP_SUMMARY"
+                  echo "| | |" >> "$GITHUB_STEP_SUMMARY"
+                  echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
+                  echo "| **Image deployed** | \`${{ env.IMAGE_REPO }}:${{ inputs.image_tag }}\` |" >> "$GITHUB_STEP_SUMMARY"
+                  echo "| **Server** | Dev (:8001) |" >> "$GITHUB_STEP_SUMMARY"
+                  echo "| **Triggered by** | @${{ github.actor }} |" >> "$GITHUB_STEP_SUMMARY"
+                  echo "" >> "$GITHUB_STEP_SUMMARY"
+                  echo "Verify the dev site, then trigger **Deploy to Production** with the same tag: \`${{ inputs.image_tag }}\`"  >> "$GITHUB_STEP_SUMMARY"
