@@ -1,3 +1,5 @@
+# Deploy to Production Workflow
+# Manual trigger — promotes the current :dev image to :latest and deploys
 name: Deploy to Production
 
 # Manual trigger — promotes the current :dev image to :latest and deploys
