@@ -35,6 +35,11 @@ yarn-error.log*
 # Coverage directory used by tools like istanbul
 coverage/
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
 # OS
 .DS_Store
 Thumbs.db
