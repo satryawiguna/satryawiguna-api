@@ -3,7 +3,7 @@ API v1 router configuration
 """
 from fastapi import APIRouter
 
-from app.api.v1 import blog_posts, auth, media, projects
+from app.api.v1 import blog_posts, auth, media, projects, skills, categories, tags
 from app.api.v1.admin import users as admin_users
 from app.api.v1.admin import projects as admin_projects
 from app.api.v1.admin import blog_posts as admin_blog_posts
@@ -26,3 +26,6 @@ api_router.include_router(admin_tags.router, prefix="/admin/tags", tags=["Admin 
 api_router.include_router(projects.router, prefix="/projects", tags=["Projects"])
 api_router.include_router(blog_posts.router, prefix="/blog-posts", tags=["Blog Posts"])
 api_router.include_router(media.router, prefix="/media", tags=["Media Library"])
+api_router.include_router(skills.router, prefix="/skills", tags=["Skills"])
+api_router.include_router(categories.router, prefix="/categories", tags=["Categories"])
+api_router.include_router(tags.router, prefix="/tags", tags=["Tags"])
