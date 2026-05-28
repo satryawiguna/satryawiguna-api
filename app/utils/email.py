@@ -1,11 +1,12 @@
 """
-Email utility for sending emails via Brevo SMTP
+Email utility for sending emails via Brevo (HTTP API or SMTP fallback)
 """
 import logging
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 import aiosmtplib
+import httpx
 
 from app.core.config import settings
 
@@ -212,17 +213,61 @@ def _build_otp_html(otp: str, email: str) -> str:
 
 async def send_otp_email(email: str, otp: str) -> bool:
     """
-    Send OTP email via Brevo SMTP.
-
-    Args:
-        email: Recipient email address
-        otp: The OTP code to send
-
-    Returns:
-        True if email was sent successfully, False otherwise
+    Send OTP email.
+    Uses Brevo HTTP API if BREVO_API_KEY is set (works even when SMTP ports are blocked).
+    Falls back to SMTP otherwise.
     """
-    html_content = _build_otp_html(otp, email)
+    if settings.BREVO_API_KEY:
+        return await _send_via_brevo_api(email, otp)
+    return await _send_via_smtp(email, otp)
 
+
+async def _send_via_brevo_api(email: str, otp: str) -> bool:
+    html_content = _build_otp_html(otp, email)
+    payload = {
+        "sender": {
+            "name": settings.SMTP_FROM_NAME,
+            "email": settings.SMTP_FROM_EMAIL,
+        },
+        "to": [{"email": email}],
+        "subject": "Confirm Identity - Satrya Wiguna",
+        "htmlContent": html_content,
+        "textContent": (
+            f"IDENTITY VERIFICATION\n"
+            f"======================\n\n"
+            f"A sign-in attempt was detected for {email}.\n"
+            f"To ensure the security of your account, please use\n"
+            f"the verification code below.\n\n"
+            f"VERIFICATION CODE: {otp}\n\n"
+            f"This code expires in 10 minutes.\n\n"
+            f"⚠️  SECURITY NOTICE:\n"
+            f"If you did not initiate this sign-in attempt, please\n"
+            f"ignore this email. Never share this code with anyone.\n\n"
+            f"--\n"
+            f"Satrya Wiguna\n"
+            f"This is an automated security message — please do not reply."
+        ),
+    }
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                "https://api.brevo.com/v3/smtp/email",
+                json=payload,
+                headers={
+                    "api-key": settings.BREVO_API_KEY,
+                    "Content-Type": "application/json",
+                },
+            )
+            response.raise_for_status()
+        logger.info(f"OTP email sent to {email} via Brevo API")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send OTP email to {email} via Brevo API: {str(e)}")
+        return False
+
+
+async def _send_via_smtp(email: str, otp: str) -> bool:
+    html_content = _build_otp_html(otp, email)
     message = MIMEMultipart("alternative")
     message["From"] = f"{settings.SMTP_FROM_NAME} <{settings.SMTP_FROM_EMAIL}>"
     message["To"] = email
@@ -244,7 +289,6 @@ async def send_otp_email(email: str, otp: str) -> bool:
         "plain",
     ))
     message.attach(MIMEText(html_content, "html"))
-
     try:
         await aiosmtplib.send(
             message,
@@ -254,8 +298,8 @@ async def send_otp_email(email: str, otp: str) -> bool:
             password=settings.SMTP_PASSWORD,
             start_tls=True,
         )
-        logger.info(f"OTP email sent to {email}")
+        logger.info(f"OTP email sent to {email} via SMTP")
         return True
     except Exception as e:
-        logger.error(f"Failed to send OTP email to {email}: {str(e)}")
+        logger.error(f"Failed to send OTP email to {email} via SMTP: {str(e)}")
         return False

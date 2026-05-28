@@ -54,6 +54,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     SMTP_FROM_EMAIL: str = "noreply@satryawiguna.me"
     SMTP_FROM_NAME: str = "Satrya Wiguna"
+    BREVO_API_KEY: str = ""
     
     @property
     def SPACES_UPLOAD_FOLDER(self) -> str:
