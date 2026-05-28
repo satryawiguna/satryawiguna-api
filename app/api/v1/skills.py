@@ -2,15 +2,13 @@
 Skills API endpoints
 """
 from typing import Optional
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.schemas.other import SkillCreate, SkillUpdate, SkillResponse
+from app.schemas.other import SkillResponse
 from app.services.skill_service import SkillService
 from app.utils.response import APIResponse, create_pagination_meta
-from app.api.dependencies import get_current_user
-from app.models.user import User
 
 
 router = APIRouter()
@@ -135,80 +133,3 @@ async def get_skills(
         pagination=pagination,
     )
 
-
-@router.get("/{skill_id}", summary="Get a skill by ID")
-async def get_skill(
-    skill_id: int,
-    db: AsyncSession = Depends(get_db),
-):
-    """
-    Get a single skill by ID.
-    """
-    service = SkillService(db)
-    skill = await service.get_skill_by_id(skill_id)
-
-    if not skill:
-        return APIResponse.error(
-            message="Skill not found",
-            status=status.HTTP_404_NOT_FOUND
-        )
-
-    return APIResponse.success(
-        message="Skill retrieved successfully",
-        data=SkillResponse.from_orm(skill).model_dump()
-    )
-
-
-@router.post("", status_code=status.HTTP_201_CREATED, summary="Create a new skill")
-async def create_skill(
-    skill_data: SkillCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """
-    Create a new skill. Requires authentication.
-    """
-    service = SkillService(db)
-    skill = await service.create_skill(skill_data)
-
-    return APIResponse.success(
-        message="Skill created successfully",
-        status=status.HTTP_201_CREATED,
-        data=SkillResponse.from_orm(skill).model_dump()
-    )
-
-
-@router.put("/{skill_id}", summary="Update a skill")
-async def update_skill(
-    skill_id: int,
-    skill_data: SkillUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """
-    Update an existing skill by ID. Requires authentication.
-    """
-    service = SkillService(db)
-    skill = await service.update_skill(skill_id, skill_data)
-
-    return APIResponse.success(
-        message="Skill updated successfully",
-        data=SkillResponse.from_orm(skill).model_dump()
-    )
-
-
-@router.delete("/{skill_id}", summary="Delete a skill")
-async def delete_skill(
-    skill_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """
-    Delete a skill by ID. Requires authentication.
-    """
-    service = SkillService(db)
-    await service.delete_skill(skill_id)
-
-    return APIResponse.success(
-        message="Skill deleted successfully"
-    )
