@@ -2,7 +2,7 @@
 Authentication API endpoints
 """
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.schemas.auth import (
@@ -12,6 +12,8 @@ from app.schemas.auth import (
     ForgotPasswordRequest,
     ResetPasswordRequest,
     ChangePasswordRequest,
+    TwoFactorLoginRequest,
+    TwoFactorVerifyRequest,
     UserWithRolesResponse
 )
 from app.services.auth_service import AuthService
@@ -23,33 +25,92 @@ from app.utils.response import APIResponse
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-# OpenAPI example for login response
+# ---------------------------------------------------------------------------
+# OpenAPI response examples — referenced in each route's `responses=` kwarg
+# ---------------------------------------------------------------------------
+
+_USER_EXAMPLE = {
+    "id": 1,
+    "name": "Admin User",
+    "email": "admin@satryawiguna.me",
+    "phone": "293789723",
+    "avatar_url": "https://example.com/avatar.jpg",
+    "isActive": True,
+    "roles": [{"id": 1, "name": "Admin"}],
+}
+
+_TOKEN_DATA_EXAMPLE = {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "6av_sUFU17n8ZowSH2-Cw5bmcxVDzt_KvMHwtfTQc831YIPqjM...",
+    "tokenType": "Bearer",
+    "expiresIn": "15m",
+    "refreshExpiresIn": "7d",
+    "user": _USER_EXAMPLE,
+}
+
 LOGIN_EXAMPLE = {
     "example": {
         "success": True,
         "status": 200,
         "message": "Login successful",
-        "data": {
-            "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-            "refreshToken": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6...",
-            "tokenType": "Bearer",
-            "expiresIn": "15m",
-            "refreshExpiresIn": "7d",
-            "user": {
-                "id": 1,
-                "name": "Admin User",
-                "email": "admin@satryawiguna.me",
-                "isActive": True,
-                "roles": [
-                    {
-                        "id": 1,
-                        "name": "Admin",
-                        "slug": "admin"
-                    }
-                ]
-            }
-        },
-        "timestamp": "2024-01-15T10:30:00Z"
+        "data": _TOKEN_DATA_EXAMPLE,
+        "timestamp": "2026-03-27T07:58:24.734Z",
+    }
+}
+
+REFRESH_EXAMPLE = {
+    "example": {
+        "success": True,
+        "status": 200,
+        "message": "Token refreshed successfully",
+        "data": _TOKEN_DATA_EXAMPLE,
+        "timestamp": "2026-03-27T07:58:24.734Z",
+    }
+}
+
+ME_EXAMPLE = {
+    "example": {
+        "success": True,
+        "status": 200,
+        "message": "User retrieved successfully",
+        "data": _USER_EXAMPLE,
+        "timestamp": "2026-03-27T07:58:24.734Z",
+    }
+}
+
+LOGOUT_EXAMPLE = {
+    "example": {
+        "success": True,
+        "status": 200,
+        "message": "Logout successful",
+        "timestamp": "2026-03-27T07:58:24.734Z",
+    }
+}
+
+CHANGE_PASSWORD_EXAMPLE = {
+    "example": {
+        "success": True,
+        "status": 200,
+        "message": "Password changed successfully",
+        "timestamp": "2026-03-27T07:58:24.734Z",
+    }
+}
+
+FORGOT_PASSWORD_EXAMPLE = {
+    "example": {
+        "success": True,
+        "status": 200,
+        "message": "Password reset email sent",
+        "timestamp": "2026-03-27T07:58:24.734Z",
+    }
+}
+
+RESET_PASSWORD_EXAMPLE = {
+    "example": {
+        "success": True,
+        "status": 200,
+        "message": "Password reset successful",
+        "timestamp": "2026-03-27T07:58:24.734Z",
     }
 }
 
@@ -69,7 +130,7 @@ LOGIN_EXAMPLE = {
 )
 async def login(
     request: LoginRequest,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Login with email and password
@@ -80,42 +141,132 @@ async def login(
     Returns JWT access token
     """
     auth_service = AuthService(db)
-    
-    # Authenticate user
-    user = auth_service.authenticate_user(request.email, request.password)
-    
+
+    user = await auth_service.authenticate_user(request.email, request.password)
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password"
+            detail="Incorrect email or password",
         )
-    
-    # Generate token
-    access_token = auth_service.generate_token(user)
-    
-    # Get user with roles
+
+    access_token = auth_service.generate_access_token(user)
+    refresh_token = await auth_service.issue_refresh_token(user.id)
     user_with_roles = auth_service.get_user_with_roles(user)
-    
-    # Create response
+
     token_response = TokenResponse(
         accessToken=access_token,
-        user=user_with_roles
+        refreshToken=refresh_token,
+        user=user_with_roles,
     )
-    
+
     return APIResponse.success(
         message="Login successful",
-        data=token_response.model_dump()
+        data=token_response.model_dump(),
     )
+
+
+@router.post(
+    "/login/2fa",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        204: {"description": "OTP sent successfully"},
+        400: {"description": "Bad request - User not found or inactive"},
+    }
+)
+async def login_2fa(
+    request: TwoFactorLoginRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Request OTP for 2FA login
+    
+    - **email**: User email address
+    
+    Generates a 6-digit OTP and sends it to the user's email.
+    The OTP must be verified using the /auth/verify/2fa endpoint.
+    
+    Returns 204 No Content on success, 400 Bad Request if user not found or inactive.
+    """
+    auth_service = AuthService(db)
+
+    try:
+        await auth_service.send_2fa_otp(request.email)
+        # Return 204 No Content - no response body
+        return None
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+
+@router.post(
+    "/verify/2fa",
+    response_model=dict,
+    status_code=status.HTTP_200_OK,
+    responses={
+        200: {
+            "description": "OTP verified successfully - Login successful",
+            "content": {
+                "application/json": LOGIN_EXAMPLE
+            }
+        },
+        400: {"description": "Invalid OTP or user not found"},
+    }
+)
+async def verify_2fa(
+    request: TwoFactorVerifyRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Verify OTP and complete 2FA login
+    
+    - **email**: User email address
+    - **otp**: 6-digit OTP code received via email
+    
+    Verifies the OTP and returns JWT access token if valid.
+    The OTP is cleared after successful verification.
+    """
+    auth_service = AuthService(db)
+
+    try:
+        user = await auth_service.verify_2fa_otp(request.email, request.otp)
+        
+        # Generate tokens
+        access_token = auth_service.generate_access_token(user)
+        refresh_token = await auth_service.issue_refresh_token(user.id)
+        user_with_roles = auth_service.get_user_with_roles(user)
+
+        token_response = TokenResponse(
+            accessToken=access_token,
+            refreshToken=refresh_token,
+            user=user_with_roles,
+        )
+
+        return APIResponse.success(
+            message="Login successful",
+            data=token_response.model_dump(),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
 
 
 @router.post(
     "/refresh",
     response_model=dict,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    responses={
+        200: {"description": "Token refreshed successfully", "content": {"application/json": REFRESH_EXAMPLE}},
+        401: {"description": "Invalid, revoked, or expired refresh token"},
+    },
 )
 async def refresh_token(
     request: RefreshTokenRequest,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Refresh access token using refresh token
@@ -125,45 +276,35 @@ async def refresh_token(
     Returns new JWT access token and refresh token
     """
     auth_service = AuthService(db)
-    
-    try:
-        # Generate new tokens
-        tokens = auth_service.refresh_access_token(request.refreshToken)
-        
-        # Get user for response
-        token_obj = auth_service.refresh_token_repository.find_by_token(tokens["refresh_token"])
-        user = auth_service.user_repository.get_by_id(token_obj.user_id)
-        user_with_roles = auth_service.get_user_with_roles(user)
-        
-        # Create response
-        token_response = TokenResponse(
-            accessToken=tokens["access_token"],
-            refreshToken=tokens["refresh_token"],
-            user=user_with_roles
-        )
-        
-        return APIResponse.success(
-            message="Token refreshed successfully",
-            data=token_response.model_dump()
-        )
-    
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to refresh token"
-        )
+
+    result = await auth_service.refresh_access_token(request.refreshToken)
+
+    user_with_roles = auth_service.get_user_with_roles(result["user"])
+
+    token_response = TokenResponse(
+        accessToken=result["access_token"],
+        refreshToken=result["refresh_token"],
+        user=user_with_roles,
+    )
+
+    return APIResponse.success(
+        message="Token refreshed successfully",
+        data=token_response.model_dump(),
+    )
 
 
 @router.get(
     "/me",
     response_model=dict,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    responses={
+        200: {"description": "Current user retrieved successfully", "content": {"application/json": ME_EXAMPLE}},
+        401: {"description": "Invalid or expired access token"},
+    },
 )
 async def get_current_user_info(
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Get current authenticated user information
@@ -189,12 +330,17 @@ async def get_current_user_info(
 @router.post(
     "/logout",
     response_model=dict,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    responses={
+        200: {"description": "Logout successful", "content": {"application/json": LOGOUT_EXAMPLE}},
+        400: {"description": "Invalid refresh token"},
+        401: {"description": "Invalid or expired access token"},
+    },
 )
 async def logout(
     request: RefreshTokenRequest,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Logout user by revoking refresh token
@@ -204,9 +350,8 @@ async def logout(
     Requires valid JWT access token in Authorization header
     """
     auth_service = AuthService(db)
-    
-    # Revoke refresh token
-    success = auth_service.logout(request.refreshToken)
+
+    success = await auth_service.logout(request.refreshToken)
     
     if success:
         return APIResponse.success(
@@ -222,11 +367,14 @@ async def logout(
 @router.post(
     "/forgot-password",
     response_model=dict,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    responses={
+        200: {"description": "Password reset email sent", "content": {"application/json": FORGOT_PASSWORD_EXAMPLE}},
+    },
 )
 async def forgot_password(
     request: ForgotPasswordRequest,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Request password reset
@@ -244,11 +392,15 @@ async def forgot_password(
 @router.post(
     "/reset-password",
     response_model=dict,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    responses={
+        200: {"description": "Password reset successful", "content": {"application/json": RESET_PASSWORD_EXAMPLE}},
+        400: {"description": "Passwords do not match"},
+    },
 )
 async def reset_password(
     request: ResetPasswordRequest,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Reset password with token
@@ -274,12 +426,17 @@ async def reset_password(
 @router.post(
     "/change-password",
     response_model=dict,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    responses={
+        200: {"description": "Password changed successfully", "content": {"application/json": CHANGE_PASSWORD_EXAMPLE}},
+        400: {"description": "Current password incorrect or new passwords do not match"},
+        401: {"description": "Invalid or expired access token"},
+    },
 )
 async def change_password(
     request: ChangePasswordRequest,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Change user password
@@ -290,26 +447,17 @@ async def change_password(
     
     Requires valid JWT access token in Authorization header
     """
-    from app.core.security import verify_password, hash_password
-    
-    # Validate passwords match
     if request.newPassword != request.newPasswordConfirmation:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="New passwords do not match"
+            detail="New passwords do not match",
         )
-    
-    # Verify current password
-    if not verify_password(request.currentPassword, current_user.password):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Current password is incorrect"
-        )
-    
-    # Update password
-    current_user.password = hash_password(request.newPassword)
-    db.commit()
-    
-    return APIResponse.success(
-        message="Password changed successfully"
+
+    auth_service = AuthService(db)
+    await auth_service.change_password(
+        user=current_user,
+        current_password=request.currentPassword,
+        new_password=request.newPassword,
     )
+
+    return APIResponse.success(message="Password changed successfully")

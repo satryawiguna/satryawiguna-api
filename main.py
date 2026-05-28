@@ -1,17 +1,20 @@
 """
 Main application entry point
 """
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
+from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from contextlib import asynccontextmanager
 import secrets
 
 from app.core.config import settings
-from app.core.database import engine, Base
+from app.core.database import Base
+from app.core.exceptions import AppError
 from app.api.v1 import api_router
+from app.utils.response import APIResponse
 
 
 # BasicAuth for Swagger
@@ -64,6 +67,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Global domain exception handler — translates AppError subclasses to JSON
+@app.exception_handler(AppError)
+async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=APIResponse.error(message=exc.message, status=exc.status_code),
+    )
 
 
 # Protected Swagger documentation

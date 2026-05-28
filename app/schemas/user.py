@@ -10,6 +10,8 @@ class UserBase(BaseModel):
     """Base user schema"""
     name: str = Field(..., min_length=1, max_length=255)
     email: EmailStr
+    phone: Optional[str] = Field(None, max_length=20)
+    avatar_url: Optional[str] = Field(None, max_length=500)
 
 
 class UserCreate(UserBase):
@@ -20,14 +22,13 @@ class UserCreate(UserBase):
 class UserUpdate(BaseModel):
     """Schema for updating a user"""
     name: Optional[str] = Field(None, min_length=1, max_length=255)
-    email: Optional[EmailStr] = None
-    password: Optional[str] = Field(None, min_length=6)
+    phone: Optional[str] = Field(None, max_length=20)
+    avatar_url: Optional[str] = Field(None, max_length=500)
 
 
 class UserResponse(UserBase):
     """Schema for user response"""
     id: int
-    email_verified_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
     

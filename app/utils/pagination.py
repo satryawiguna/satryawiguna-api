@@ -1,9 +1,14 @@
 """
 Pagination utilities
 """
-from typing import TypeVar, Generic, List, Optional
+from typing import TypeVar, Generic, List, Optional, TYPE_CHECKING
+
 from pydantic import BaseModel
-from sqlalchemy.orm import Query
+from sqlalchemy import select, func
+from sqlalchemy.sql import Select
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 
 T = TypeVar('T')
@@ -16,66 +21,62 @@ class PaginationParams(BaseModel):
     sortBy: str = "id"
     sortOrder: str = "DESC"
     keyword: Optional[str] = None
-    
+
     class Config:
         frozen = True
 
 
 class PaginatedResult(Generic[T]):
     """Paginated query result"""
-    
+
     def __init__(self, items: List[T], total: int, page: int, limit: int):
         self.items = items
         self.total = total
         self.page = page
         self.limit = limit
-    
+
     @property
     def total_pages(self) -> int:
-        """Calculate total pages"""
         if self.limit == 0:
             return 0
         return (self.total + self.limit - 1) // self.limit
-    
+
     @property
     def has_next(self) -> bool:
-        """Check if there's a next page"""
         return self.page < self.total_pages
-    
+
     @property
     def has_previous(self) -> bool:
-        """Check if there's a previous page"""
         return self.page > 1
 
 
-def paginate(
-    query: Query,
+async def paginate_async(
+    db: "AsyncSession",
+    stmt: Select,
     page: int = 1,
-    limit: Optional[int] = 10
+    limit: Optional[int] = 10,
 ) -> PaginatedResult:
     """
-    Paginate a SQLAlchemy query
-    
+    Paginate a SQLAlchemy 2.0 select statement using an AsyncSession.
+
     Args:
-        query: SQLAlchemy query object
-        page: Page number (1-indexed)
-        limit: Items per page (None for all items)
-        
+        db: Async database session
+        stmt: A SQLAlchemy ``select()`` statement (filters/ordering already applied)
+        page: 1-based page number
+        limit: Rows per page; ``None`` returns all rows without pagination
+
     Returns:
-        PaginatedResult object
+        PaginatedResult containing items + total count
     """
-    # Get total count
-    total = query.count()
-    
-    # If no limit, return all items
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total: int = (await db.execute(count_stmt)).scalar() or 0
+
     if limit is None:
-        items = query.all()
-        return PaginatedResult(items=items, total=total, page=1, limit=total)
-    
-    # Calculate offset
+        result = await db.execute(stmt)
+        items = result.scalars().all()
+        return PaginatedResult(items=items, total=total, page=1, limit=total or 0)
+
     offset = (page - 1) * limit
-    
-    # Get paginated items
-    items = query.offset(offset).limit(limit).all()
-    
+    result = await db.execute(stmt.offset(offset).limit(limit))
+    items = result.scalars().all()
     return PaginatedResult(items=items, total=total, page=page, limit=limit)

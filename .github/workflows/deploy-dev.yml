@@ -1,0 +1,46 @@
+# Deploy to Development Workflow
+# Auto-triggers on successful Build workflow for rc/* branches, or can be run manually for re-deploys (no inputs needed)
+name: Deploy to Development
+
+# Auto-triggers when the Build workflow completes successfully on rc/*
+# Can also be run manually for re-deploys (no inputs needed)
+on:
+    workflow_run:
+        workflows: ["Build"]
+        branches:
+            - "rc/**"
+        types:
+            - completed
+    workflow_dispatch:
+
+jobs:
+    deploy-dev:
+        name: Deploy :dev → Dev Server (:8001)
+        runs-on: ubuntu-latest
+        # Skip auto-trigger if the upstream build failed
+        if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+        environment: development
+
+        steps:
+            - name: Deploy to dev server via SSH
+              uses: appleboy/ssh-action@v1.0.3
+              env:
+                  DH_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+                  DH_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+                  IMAGE_REPO: ${{ secrets.DOCKERHUB_USERNAME }}/satryawiguna-api
+                  APP_DIR: ${{ secrets.DEV_SSH_APP_DIR }}
+              with:
+                  host: ${{ secrets.DEV_SSH_HOST }}
+                  username: ${{ secrets.DEV_SSH_USER }}
+                  key: ${{ secrets.DEV_SSH_KEY }}
+                  envs: DH_TOKEN,DH_USER,IMAGE_REPO,APP_DIR
+                  script: |
+                      set -e
+                      echo "$DH_TOKEN" | docker login -u "$DH_USER" --password-stdin
+                      docker network create satryawiguna_network 2>/dev/null || true
+                      docker pull "$IMAGE_REPO:dev"
+                      docker tag "$IMAGE_REPO:dev" satryawiguna_api:dev
+                      cd "$APP_DIR"
+                      docker compose -f docker-compose.dev.yml up -d --no-build
+                      docker image prune -f
+                      echo "Dev deployment complete"

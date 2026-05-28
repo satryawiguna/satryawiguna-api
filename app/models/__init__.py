@@ -2,9 +2,9 @@
 Models package initialization
 Import all models to ensure they're registered with SQLAlchemy
 """
-from app.models.other import Media, Setting, Skill, Testimonial, ContactMessage
+from app.models.other import Media, Setting, Skill
 from app.models.user import User, Role, UserRole
-from app.models.project import Project, ProjectImage
+from app.models.project import Project, ProjectImage, ProjectSkill, ProjectCategory
 from app.models.blog import BlogPost, Category, Tag, BlogPostCategory, BlogPostTag
 
 __all__ = [
@@ -12,15 +12,18 @@ __all__ = [
     "Media",
     "Setting",
     "Skill",
-    "Testimonial",
-    "ContactMessage",
+
     # User models
     "User",
     "Role",
     "UserRole",
+
     # Project models
     "Project",
     "ProjectImage",
+    "ProjectSkill",
+    "ProjectCategory",
+
     # Blog models
     "BlogPost",
     "Category",

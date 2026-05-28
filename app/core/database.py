@@ -1,38 +1,56 @@
 """
 Database connection and session management
 """
+from typing import AsyncGenerator
+
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from typing import Generator
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base
 
 from app.core.config import settings
 
 
-# Create database engine
-engine = create_engine(
+# ---------------------------------------------------------------------------
+# Async engine — used by all FastAPI route handlers
+# ---------------------------------------------------------------------------
+async_engine = create_async_engine(
+    settings.ASYNC_DATABASE_URL,
+    pool_pre_ping=True,
+    pool_recycle=3600,
+    echo=False,
+)
+
+AsyncSessionLocal = async_sessionmaker(
+    bind=async_engine,
+    class_=AsyncSession,
+    autocommit=False,
+    autoflush=False,
+    expire_on_commit=False,  # required: avoids implicit lazy-loads after commit
+)
+
+# ---------------------------------------------------------------------------
+# Sync engine — kept exclusively for Alembic migrations and CLI seeders.
+# Do NOT inject this into FastAPI routes.
+# ---------------------------------------------------------------------------
+sync_engine = create_engine(
     settings.DATABASE_URL,
     pool_pre_ping=True,
     pool_recycle=3600,
-    echo=False  # Disable SQL query logging
+    echo=False,
 )
 
-# Create SessionLocal class
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=sync_engine)
 
-# Create Base class for models
+# Shared declarative base (models register themselves here)
 Base = declarative_base()
 
 
-def get_db() -> Generator[Session, None, None]:
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
-    Database dependency for FastAPI routes
-    
-    Yields:
-        Database session
+    Async database dependency for FastAPI routes.
+
+    Yields an AsyncSession that is automatically closed when the
+    request finishes, even if an exception is raised.
     """
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    async with AsyncSessionLocal() as session:
+        yield session

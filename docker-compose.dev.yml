@@ -1,0 +1,50 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Development Environment — API (:8001) + Redis
+#
+# Requires shared infra to be running first:
+#   docker compose -f docker-compose.yml up -d
+#
+# Start:   docker compose -f docker-compose.dev.yml up -d
+# Rebuild: docker compose -f docker-compose.dev.yml up -d --build
+# Logs:    docker compose -f docker-compose.dev.yml logs -f api_dev
+# Stop:    docker compose -f docker-compose.dev.yml down
+# ─────────────────────────────────────────────────────────────────────────────
+
+networks:
+  satryawiguna_network:
+    external: true
+
+services:
+  api_dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: satryawiguna_api:dev
+    container_name: satryawiguna_api_dev
+    restart: unless-stopped
+    env_file:
+      - .env.dev
+    ports:
+      - "8001:8000"
+    volumes:
+      # Mount source code for hot-reload (dev only)
+      - .:/app
+    depends_on:
+      - redis_dev
+    networks:
+      - satryawiguna_network
+
+  redis_dev:
+    image: redis:7-alpine
+    container_name: satryawiguna_redis_dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - satryawiguna_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5

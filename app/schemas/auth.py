@@ -20,6 +20,8 @@ class UserWithRolesResponse(BaseModel):
     id: int
     name: str
     email: str
+    phone: Optional[str] = None
+    avatar_url: Optional[str] = None
     isActive: bool
     roles: List[RoleResponse]
     
@@ -36,8 +38,10 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     """Token response schema"""
     accessToken: str
+    refreshToken: Optional[str] = None
     tokenType: str = "Bearer"
     expiresIn: str = "15m"
+    refreshExpiresIn: str = "7d"
     user: UserWithRolesResponse
 
 
@@ -63,3 +67,33 @@ class ChangePasswordRequest(BaseModel):
     currentPassword: str
     newPassword: str
     newPasswordConfirmation: str
+
+
+class TwoFactorLoginRequest(BaseModel):
+    """2FA Login request schema"""
+    email: EmailStr
+
+
+class TwoFactorVerifyRequest(BaseModel):
+    """2FA Verify request schema"""
+    email: EmailStr
+    otp: str
+
+
+class SendOtpRequest(BaseModel):
+    """Send OTP request schema"""
+    email: EmailStr
+    phone: Optional[str] = None
+
+
+class VerifyOtpRequest(BaseModel):
+    """Verify OTP request schema"""
+    email: EmailStr
+    otp: str
+
+
+class VerifyOtpResponse(BaseModel):
+    """Verify OTP response schema"""
+    success: bool
+    message: str
+    emailVerified: bool = False

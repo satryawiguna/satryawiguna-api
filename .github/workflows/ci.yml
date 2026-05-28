@@ -1,0 +1,50 @@
+name: CI — Lint & Test
+
+# Runs on every push to feature/bugfix branches
+# AND on every pull request targeting rc/* (pre-merge gate)
+on:
+    push:
+        branches:
+            - "feature/**"
+            - "bugfix/**"
+    pull_request:
+        branches:
+            - "rc/**"
+
+jobs:
+    lint-and-test:
+        name: Lint & Test (Python 3.12)
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Python 3.12
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.12"
+                  cache: "pip"
+
+            - name: Install dependencies
+              run: |
+                  pip install --upgrade pip
+                  pip install -r requirements.txt
+                  pip install -r requirements-test.txt
+
+            - name: Lint with ruff
+              run: ruff check .
+
+            - name: Run tests
+              run: pytest --tb=short -q
+              # conftest.py already seeds JWT_SECRET_KEY via os.environ.setdefault.
+              # Tests use SQLite in-memory — no MySQL service needed.
+              env:
+                  APP_ENV: development
+                  DB_HOST: localhost
+                  DB_PORT: 3306
+                  DB_USER: root
+                  DB_PASSWORD: ""
+                  DB_NAME: test_db
+                  SWAGGER_USERNAME: admin
+                  SWAGGER_PASSWORD: testpassword123

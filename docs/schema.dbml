@@ -3,6 +3,9 @@ id bigint [pk, increment]
 name varchar
 email varchar [unique]
 password varchar
+phone varchar
+otp varchar
+avatar_url varchar
 email_verified_at timestamp
 is_active boolean
 created_at timestamp
@@ -23,13 +26,13 @@ role_id bigint
 Table projects {
 id bigint [pk, increment]
 title varchar
+sub_title varchar
 slug varchar [unique]
 description text
 content text
-featured boolean
 demo_url varchar
 repository_url varchar
-thumbnail_id bigint
+thumbnail_url varchar
 published_at timestamp
 created_at timestamp
 updated_at timestamp
@@ -38,7 +41,19 @@ updated_at timestamp
 Table project_images {
 id bigint [pk, increment]
 project_id bigint
-media_id bigint
+image_url varchar
+}
+
+Table project_skills {
+id varchar [pk]
+project_id bigint
+skill_id bigint
+}
+
+Table project_categories {
+id varchar [pk]
+project_id bigint
+category_id bigint
 }
 
 Table blog_posts {
@@ -47,7 +62,8 @@ title varchar
 slug varchar [unique]
 excerpt text
 content text
-featured_image_id bigint
+thumbnail_url varchar
+image_url varchar
 author_id bigint
 status varchar
 published_at timestamp
@@ -59,10 +75,11 @@ Table categories {
 id bigint [pk, increment]
 name varchar
 slug varchar
+type varchar [note: "BLOG_POST or PROJECT, default BLOG_POST"]
 }
 
 Table blog_post_categories {
-id bigint [pk, increment]
+id varchar [pk]
 post_id bigint
 category_id bigint
 }
@@ -74,7 +91,7 @@ slug varchar
 }
 
 Table blog_post_tags {
-id bigint [pk, increment]
+id varchar [pk]
 post_id bigint
 tag_id bigint
 }
@@ -84,33 +101,12 @@ id bigint [pk, increment]
 name varchar
 category varchar
 level int
-icon varchar
+icon_url varchar
 sort_order int
 }
 
-Table testimonials {
-id bigint [pk, increment]
-name varchar
-position varchar
-company varchar
-content text
-avatar_id bigint
-featured boolean
-created_at timestamp
-}
-
-Table contact_messages {
-id bigint [pk, increment]
-name varchar
-email varchar
-subject varchar
-message text
-is_read boolean
-created_at timestamp
-}
-
 Table media {
-id bigint [pk, increment]
+id varchar [pk]
 file_name varchar
 file_path varchar
 mime_type varchar
@@ -129,16 +125,14 @@ Ref: user_roles.role_id > roles.id
 
 Ref: blog_posts.author_id > users.id
 
-Ref: blog_posts.featured_image_id > media.id
-Ref: projects.thumbnail_id > media.id
-
 Ref: project_images.project_id > projects.id
-Ref: project_images.media_id > media.id
+Ref: project_skills.project_id > projects.id
+Ref: project_skills.skill_id > skills.id
+Ref: project_categories.project_id > projects.id
+Ref: project_categories.category_id > categories.id
 
 Ref: blog_post_categories.post_id > blog_posts.id
 Ref: blog_post_categories.category_id > categories.id
 
 Ref: blog_post_tags.post_id > blog_posts.id
 Ref: blog_post_tags.tag_id > tags.id
-
-Ref: testimonials.avatar_id > media.id

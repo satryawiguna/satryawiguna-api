@@ -1,0 +1,49 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Production Environment — API (:8002) + Redis
+#
+# Requires shared infra to be running first:
+#   docker compose -f docker-compose.yml up -d
+#
+# Start:   docker compose -f docker-compose.prod.yml up -d
+# Rebuild: docker compose -f docker-compose.prod.yml up -d --build
+# Logs:    docker compose -f docker-compose.prod.yml logs -f api_prod
+# Stop:    docker compose -f docker-compose.prod.yml down
+# ─────────────────────────────────────────────────────────────────────────────
+
+networks:
+  satryawiguna_network:
+    external: true
+
+services:
+  api_prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: satryawiguna_api:prod
+    container_name: satryawiguna_api_prod
+    restart: unless-stopped
+    env_file:
+      - .env.prod
+    ports:
+      - "8002:8000"
+    # No source mount in production — source is baked into the image
+    depends_on:
+      - redis_prod
+    networks:
+      - satryawiguna_network
+
+  redis_prod:
+    image: redis:7-alpine
+    container_name: satryawiguna_redis_prod
+    restart: unless-stopped
+    # Bind to a different host port to avoid conflict with redis_dev (:6379)
+    ports:
+      - "6380:6379"
+    networks:
+      - satryawiguna_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5

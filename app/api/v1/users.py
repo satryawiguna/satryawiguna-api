@@ -3,7 +3,7 @@ User API endpoints
 """
 from typing import Optional
 from fastapi import APIRouter, Depends, Query, status
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.schemas.user import UserCreate, UserUpdate, UserResponse
@@ -151,8 +151,8 @@ async def get_users(
     sortBy: str = Query("created_at", description="Sort field"),
     sortOrder: str = Query("DESC", description="Sort order (ASC or DESC)"),
     keyword: Optional[str] = Query(None, description="Search keyword for name or email"),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Get all users with optional pagination and filters.
@@ -160,32 +160,27 @@ async def get_users(
     Returns list of users with or without pagination based on limit parameter.
     """
     service = UserService(db)
-    result = service.get_users(
+    result = await service.get_users(
         page=page,
         limit=limit,
         sort_by=sortBy,
         sort_order=sortOrder,
-        keyword=keyword
+        keyword=keyword,
     )
-    
-    # Convert to response format
+
     users_data = [UserResponse.from_orm(user).model_dump() for user in result.items]
-    
-    # Build response
+
     if limit is None:
-        # No pagination
-        return APIResponse.success(
-            message="Users retrieved successfully",
-            data=users_data
-        )
-    else:
-        # With pagination
-        pagination = create_pagination_meta(result.total, result.page, result.limit)
         return APIResponse.success(
             message="Users retrieved successfully",
             data=users_data,
-            pagination=pagination
         )
+    pagination = create_pagination_meta(result.total, result.page, result.limit)
+    return APIResponse.success(
+        message="Users retrieved successfully",
+        data=users_data,
+        pagination=pagination,
+    )
 
 
 @router.get(
@@ -204,14 +199,14 @@ async def get_users(
 )
 async def get_user(
     user_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Get a single user by ID
     """
     service = UserService(db)
-    user = service.get_user_by_id(user_id)
+    user = await service.get_user_by_id(user_id)
     
     if not user:
         return APIResponse.error(
@@ -230,15 +225,15 @@ async def get_user(
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_user(
     user_data: UserCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Create a new user
     """
     service = UserService(db)
-    user = service.create_user(user_data)
-    
+    user = await service.create_user(user_data)
+
     user_data = UserResponse.from_orm(user).model_dump()
     
     return APIResponse.success(
@@ -252,14 +247,14 @@ async def create_user(
 async def update_user(
     user_id: int,
     user_data: UserUpdate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Update a user
     """
     service = UserService(db)
-    user = service.update_user(user_id, user_data)
+    user = await service.update_user(user_id, user_data)
     
     user_response = UserResponse.from_orm(user).model_dump()
     
@@ -272,14 +267,14 @@ async def update_user(
 @router.delete("/{user_id}")
 async def delete_user(
     user_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Delete a user
     """
     service = UserService(db)
-    service.delete_user(user_id)
+    await service.delete_user(user_id)
     
     return APIResponse.success(
         message="User deleted successfully"

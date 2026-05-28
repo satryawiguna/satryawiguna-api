@@ -6,12 +6,19 @@ from typing import Optional, Dict
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 import secrets
+import random
 
 from app.core.config import settings
 
 
 # Password hashing context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Using explicit rounds to avoid bcrypt compatibility issues
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+    bcrypt__rounds=12,
+    bcrypt__ident="2b"
+)
 
 # Token expiration constants
 ACCESS_TOKEN_EXPIRE_MINUTES = 15  # 15 minutes
@@ -130,3 +137,16 @@ def create_tokens(user_id: int, email: str) -> Dict[str, str]:
         "access_token": access_token,
         "refresh_token": refresh_token
     }
+
+
+def generate_otp(length: int = 6) -> str:
+    """
+    Generate a random OTP (One-Time Password)
+    
+    Args:
+        length: Length of the OTP (default: 6)
+        
+    Returns:
+        OTP string of specified length
+    """
+    return ''.join([str(random.randint(0, 9)) for _ in range(length)])
