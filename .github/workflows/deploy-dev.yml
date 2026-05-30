@@ -41,6 +41,7 @@ jobs:
                       docker pull "$IMAGE_REPO:dev"
                       docker tag "$IMAGE_REPO:dev" satryawiguna_api:dev
                       cd "$APP_DIR"
+                      git pull
                       docker compose -f docker-compose.dev.yml up -d --no-build
                       docker image prune -f
                       echo "Dev deployment complete"
