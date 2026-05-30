@@ -7,6 +7,7 @@ from app.models.user import User, Role, UserRole
 from app.models.project import Project, ProjectImage, ProjectSkill, ProjectCategory
 from app.models.blog import BlogPost, Category, Tag, BlogPostCategory, BlogPostTag
 from app.models.experience import Experience, ExperienceSkill
+from app.models.education import Education
 
 __all__ = [
     # Other models
@@ -35,4 +36,7 @@ __all__ = [
     # Experience models
     "Experience",
     "ExperienceSkill",
+
+    # Education models
+    "Education",
 ]
