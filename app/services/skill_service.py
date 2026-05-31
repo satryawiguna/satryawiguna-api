@@ -41,7 +41,8 @@ class SkillService:
 
     async def create_skill(self, skill_data: SkillCreate) -> Skill:
         skill = Skill(**skill_data.model_dump())
-        return await self.skill_repository.create(skill)
+        created = await self.skill_repository.create(skill)
+        return await self.skill_repository.get_by_id(created.id)
 
     async def update_skill(self, skill_id: int, skill_data: SkillUpdate) -> Skill:
         skill = await self.skill_repository.get_by_id(skill_id)
@@ -51,7 +52,8 @@ class SkillService:
         for field, value in skill_data.model_dump(exclude_unset=True).items():
             setattr(skill, field, value)
 
-        return await self.skill_repository.update(skill)
+        await self.skill_repository.update(skill)
+        return await self.skill_repository.get_by_id(skill_id)
 
     async def delete_skill(self, skill_id: int) -> bool:
         skill = await self.skill_repository.get_by_id(skill_id)
