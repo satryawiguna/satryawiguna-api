@@ -1,0 +1,28 @@
+---
+description: Load canonical AI context from .github/ directory
+globs: "**/*"
+---
+
+# Cursor AI Context
+
+This project's canonical AI context lives in `.github/`.  
+**Do not duplicate** — reference the source.
+
+## Always read first
+
+- `.github/copilot-instructions.md` — project identity, layers, routes, contracts, conventions, CI/CD, MCP
+- `AGENTS.md` — one-page agent registry with pipeline order and key contracts
+
+## Workflow
+
+Before implementing any feature:
+
+1. Read `.github/copilot-instructions.md` — project identity, layers, routes, contracts, conventions, CI/CD, MCP
+2. Read the relevant agent definition in `.github/agents/*.agent.md`
+3. Read `AGENTS.md` — one-page agent registry with pipeline order
+4. Load shared business context from `satryawiguna/satryawiguna-shared` on GitHub:
+   - `business/glossary.md` — domain terms
+   - `business/business-rules.md` — domain invariants
+   - `architecture/api-contracts.md` — endpoint contracts
+
+All conventions are defined **only** in `.github/copilot-instructions.md` — always load from there.
