@@ -8,6 +8,7 @@ from app.models.project import Project, ProjectImage, ProjectSkill, ProjectCateg
 from app.models.blog import BlogPost, Category, Tag, BlogPostCategory, BlogPostTag
 from app.models.experience import Experience, ExperienceSkill
 from app.models.education import Education
+from app.models.strength import Strength
 
 __all__ = [
     # Other models
@@ -39,4 +40,7 @@ __all__ = [
 
     # Education models
     "Education",
+
+    # Strength models
+    "Strength",
 ]
