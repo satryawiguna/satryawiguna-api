@@ -24,9 +24,9 @@ def upgrade() -> None:
     sa.Column('description', sa.Text(), nullable=True),
     sa.Column('quote', sa.String(length=500), nullable=True),
     sa.Column('icon_url', sa.String(length=500), nullable=True),
-    sa.Column('sort_order', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('sort_order', sa.Integer(), nullable=False, server_default='0'),
+    sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('NOW()')),
+    sa.Column('updated_at', sa.DateTime(), nullable=False, server_default=sa.text('NOW()')),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_career_impacts_id'), 'career_impacts', ['id'], unique=False)

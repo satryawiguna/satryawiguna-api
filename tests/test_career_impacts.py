@@ -466,6 +466,32 @@ class TestUpdateCareerImpact:
         body = response.json()
         assert body["success"] is True
         assert body["data"]["title"] == "Senior Full-Stack Architect"
+        # Verify other fields remain unchanged
+        assert body["data"]["description"] == "Built cross-border event management systems for HK, MY, SG, PH, and ID."
+        assert body["data"]["quote"] == "Scaling platforms for 500k+ daily active users"
+        assert body["data"]["icon_url"] == "https://cdn.satryawiguna.me/icons/globe.svg"
+        assert body["data"]["sort_order"] == 0
+
+    async def test_update_career_impact_clear_icon_url(
+        self,
+        client: AsyncClient,
+        career_impact: CareerImpact,
+        auth_headers: dict,
+    ):
+        """Setting icon_url to null should clear it."""
+        response = await client.put(
+            f"/api/v1/admin/career-impacts/{career_impact.id}",
+            json={"icon_url": None},
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["data"]["icon_url"] is None
+        # Verify other fields remain unchanged
+        assert body["data"]["title"] == "Regional Full-Stack Role"
+        assert body["data"]["quote"] == "Scaling platforms for 500k+ daily active users"
+        assert body["data"]["sort_order"] == 0
 
     async def test_update_career_impact_partial_update(
         self,

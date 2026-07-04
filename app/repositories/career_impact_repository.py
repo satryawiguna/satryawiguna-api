@@ -3,7 +3,7 @@ Career Impact repository for career impact-specific database operations
 """
 from typing import Optional
 
-from sqlalchemy import select, desc, asc, or_
+from sqlalchemy import select, desc, asc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.career_impact import CareerImpact
