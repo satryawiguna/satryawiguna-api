@@ -22,6 +22,7 @@ class Skill(Base):
     # Relationships
     category = relationship("Category", back_populates="skills")
     project_skills = relationship("ProjectSkill", back_populates="skill", cascade="all, delete-orphan")
+    experience_skills = relationship("ExperienceSkill", back_populates="skill", cascade="all, delete-orphan")
     
 
 class Media(Base):

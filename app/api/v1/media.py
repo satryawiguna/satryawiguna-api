@@ -136,9 +136,9 @@ stored on DigitalOcean Spaces in a folder determined by the application environm
 - **Dev/Local** → uploaded to the `dev/` folder
 - **Production** → uploaded to the `prod/` folder
 
-**Allowed file types:** JPEG, PNG, GIF, WebP, SVG, PDF, TXT, DOC, DOCX, XLS, XLSX, ZIP
+**Allowed file types:** JPEG, PNG, GIF, WebP, SVG, PDF, TXT, DOC, DOCX, XLS, XLSX, ZIP, MP4, WEBM, MOV, AVI
 
-**Maximum file size:** 10 MB
+**Maximum file size:** 50 MB
 
 Requires authentication.
 """,

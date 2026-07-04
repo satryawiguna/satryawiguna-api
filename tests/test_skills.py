@@ -203,3 +203,116 @@ class TestDeleteSkill:
         response = await client.delete(f"/api/v1/admin/skills/{skill.id}")
 
         assert response.status_code == 403
+
+
+# ---------------------------------------------------------------------------
+# GroupBy (public route: /api/v1/skills)
+# ---------------------------------------------------------------------------
+
+
+class TestGetSkillsGroupBy:
+    """Tests for the groupBy parameter on GET /api/v1/skills"""
+
+    @pytest.fixture()
+    async def multi_skills(self, db: AsyncSession) -> list[Skill]:
+        """Create several skills with varied attributes for grouping tests."""
+        skills = [
+            Skill(name="Python", category_id=None, level=90, sort_order=1),
+            Skill(name="JavaScript", category_id=None, level=85, sort_order=2),
+            Skill(name="TypeScript", category_id=None, level=85, sort_order=3),
+            Skill(name="Go", category_id=None, level=80, sort_order=4),
+            Skill(name="Rust", category_id=None, level=90, sort_order=5),
+        ]
+        for s in skills:
+            db.add(s)
+        await db.commit()
+        for s in skills:
+            await db.refresh(s)
+        return skills
+
+    async def test_group_by_level(
+        self, client: AsyncClient, multi_skills: list[Skill]
+    ):
+        """Group by level — data should be an array of arrays grouped by level."""
+        response = await client.get(
+            "/api/v1/skills", params={"groupBy": "level"}
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success"] is True
+        assert isinstance(body["data"], list)
+        assert len(body["data"]) > 0
+        # Each element should be a list (group)
+        for group in body["data"]:
+            assert isinstance(group, list)
+            assert len(group) >= 1
+        # Verify no pagination when limit=None
+        assert "pagination" not in body
+
+    async def test_group_by_level_with_pagination(
+        self, client: AsyncClient, multi_skills: list[Skill]
+    ):
+        """Group by level with pagination — pagination meta present, data grouped."""
+        response = await client.get(
+            "/api/v1/skills", params={"groupBy": "level", "limit": 10}
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success"] is True
+        # Should have pagination meta
+        assert "pagination" in body
+        pag = body["pagination"]
+        assert pag["total"] == 5
+        assert pag["page"] == 1
+        # Data should be grouped by level
+        assert isinstance(body["data"], list)
+        for group in body["data"]:
+            assert isinstance(group, list)
+            # All items in a group should share the same level
+            levels = {item["level"] for item in group}
+            assert len(levels) == 1
+
+    async def test_group_by_invalid_column(self, client: AsyncClient):
+        """Invalid groupBy column returns 422 error."""
+        response = await client.get(
+            "/api/v1/skills", params={"groupBy": "invalid_column"}
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success"] is False
+        assert body["status"] == 422
+        assert "invalid_column" in body["message"]
+
+    async def test_group_by_without_pagination_returns_no_pagination_meta(
+        self, client: AsyncClient, multi_skills: list[Skill]
+    ):
+        """groupBy with limit omitted returns grouped data without pagination meta."""
+        response = await client.get(
+            "/api/v1/skills", params={"groupBy": "sort_order"}
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success"] is True
+        assert "pagination" not in body
+        assert isinstance(body["data"], list)
+        for group in body["data"]:
+            assert isinstance(group, list)
+
+    async def test_group_by_preserves_sort_order_in_groups(
+        self, client: AsyncClient, multi_skills: list[Skill]
+    ):
+        """Items within each group should maintain the default sort_order ordering."""
+        response = await client.get(
+            "/api/v1/skills", params={"groupBy": "level"}
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+        # Each group should be sorted by sort_order ascending
+        for group in body["data"]:
+            sort_orders = [item["sort_order"] for item in group]
+            assert sort_orders == sorted(sort_orders)

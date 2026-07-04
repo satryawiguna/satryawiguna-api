@@ -17,8 +17,8 @@ from app.utils.pagination import PaginatedResult
 class MediaService:
     """Service for media-related business logic"""
 
-    # Maximum file size: 10 MB
-    MAX_FILE_SIZE = 10 * 1024 * 1024
+    # Maximum file size: 50 MB
+    MAX_FILE_SIZE = 50 * 1024 * 1024
 
     # Allowed MIME types
     ALLOWED_MIME_TYPES = {
@@ -35,6 +35,10 @@ class MediaService:
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "application/zip",
         "application/x-zip-compressed",
+        "video/mp4",
+        "video/webm",
+        "video/quicktime",
+        "video/x-msvideo",
     }
 
     def __init__(self, db: AsyncSession):
