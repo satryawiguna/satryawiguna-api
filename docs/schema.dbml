@@ -159,6 +159,17 @@ created_at timestamp
 updated_at timestamp
 }
 
+Table career_impacts {
+id bigint [pk, increment]
+title varchar
+description text
+quote varchar
+icon_url varchar
+sort_order int
+created_at timestamp
+updated_at timestamp
+}
+
 Ref: user_roles.user_id > users.id
 Ref: user_roles.role_id > roles.id
 Ref: refresh_tokens.user_id > users.id
