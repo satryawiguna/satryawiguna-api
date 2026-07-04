@@ -14,13 +14,22 @@ updated_at timestamp
 
 Table roles {
 id bigint [pk, increment]
-name varchar
+name varchar [unique]
 }
 
 Table user_roles {
 id bigint [pk, increment]
 user_id bigint
 role_id bigint
+}
+
+Table refresh_tokens {
+id bigint [pk, increment]
+token varchar [unique]
+user_id bigint
+expires_at timestamp
+revoked boolean
+created_at timestamp
 }
 
 Table projects {
@@ -74,8 +83,8 @@ updated_at timestamp
 Table categories {
 id bigint [pk, increment]
 name varchar
-slug varchar
-type varchar [note: "BLOG_POST or PROJECT, default BLOG_POST"]
+slug varchar [unique]
+type varchar [note: "BLOG_POST, PROJECT or SKILL, default BLOG_POST"]
 }
 
 Table blog_post_categories {
@@ -87,7 +96,7 @@ category_id bigint
 Table tags {
 id bigint [pk, increment]
 name varchar
-slug varchar
+slug varchar [unique]
 }
 
 Table blog_post_tags {
@@ -99,7 +108,7 @@ tag_id bigint
 Table skills {
 id bigint [pk, increment]
 name varchar
-category varchar
+category_id bigint
 level int
 icon_url varchar
 sort_order int
@@ -120,8 +129,39 @@ key varchar [unique]
 value text
 }
 
+Table experiences {
+id bigint [pk, increment]
+title varchar
+company varchar
+employment_type varchar [note: "FULL_TIME, PART_TIME, CONTRACT, FREELANCE, or INTERNSHIP"]
+description text
+start_date date
+end_date date
+sort_order int
+created_at timestamp
+updated_at timestamp
+}
+
+Table experience_skills {
+id varchar [pk]
+experience_id bigint
+skill_id bigint
+}
+
+Table educations {
+id bigint [pk, increment]
+degree varchar
+institution varchar
+start_year int
+end_year int
+sort_order int
+created_at timestamp
+updated_at timestamp
+}
+
 Ref: user_roles.user_id > users.id
 Ref: user_roles.role_id > roles.id
+Ref: refresh_tokens.user_id > users.id
 
 Ref: blog_posts.author_id > users.id
 
@@ -136,3 +176,8 @@ Ref: blog_post_categories.category_id > categories.id
 
 Ref: blog_post_tags.post_id > blog_posts.id
 Ref: blog_post_tags.tag_id > tags.id
+
+Ref: skills.category_id > categories.id
+
+Ref: experience_skills.experience_id > experiences.id
+Ref: experience_skills.skill_id > skills.id

@@ -1,7 +1,9 @@
 """
 Skills API endpoints
 """
+from collections import defaultdict
 from typing import Optional
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,10 +13,23 @@ from app.services.skill_service import SkillService
 from app.utils.response import APIResponse, create_pagination_meta
 
 
+# Allowed columns for groupBy
+GROUP_BY_ALLOWED = {"name", "level", "category_id", "sort_order"}
+
 router = APIRouter()
 
 
 # Response examples for Swagger
+_SKILL_DATA = {
+    "name": "Python",
+    "category_id": 1,
+    "level": 90,
+    "icon_url": "https://example.com/icons/python.svg",
+    "sort_order": 1,
+    "id": 1,
+    "category": {"id": 1, "name": "Backend", "slug": "backend", "type": "SKILL"}
+}
+
 SKILLS_LIST_EXAMPLES = {
     "with_pagination": {
         "summary": "With pagination (when limit is provided)",
@@ -23,17 +38,7 @@ SKILLS_LIST_EXAMPLES = {
             "success": True,
             "status": 200,
             "message": "Skills retrieved successfully",
-            "data": [
-                {
-                    "name": "Python",
-                    "category_id": 1,
-                    "level": 90,
-                    "icon_url": "https://example.com/icons/python.svg",
-                    "sort_order": 1,
-                    "id": 1,
-                    "category": {"id": 1, "name": "Backend", "slug": "backend", "type": "SKILL"}
-                }
-            ],
+            "data": [_SKILL_DATA],
             "pagination": {
                 "total": 1,
                 "page": 1,
@@ -46,23 +51,55 @@ SKILLS_LIST_EXAMPLES = {
         }
     },
     "without_pagination": {
-        "summary": "Without pagination (when limit is omitted)",
-        "description": "Response without pagination metadata",
+        "summary": "Without pagination (default — limit omitted)",
+        "description": "Response without pagination metadata (default behaviour)",
+        "value": {
+            "success": True,
+            "status": 200,
+            "message": "Skills retrieved successfully",
+            "data": [_SKILL_DATA],
+            "timestamp": "2026-03-16T00:00:00.000Z"
+        }
+    },
+    "grouped": {
+        "summary": "Grouped by category_id",
+        "description": "Data is an array of arrays when groupBy is used",
         "value": {
             "success": True,
             "status": 200,
             "message": "Skills retrieved successfully",
             "data": [
-                {
-                    "name": "Python",
-                    "category_id": 1,
-                    "level": 90,
-                    "icon_url": "https://example.com/icons/python.svg",
-                    "sort_order": 1,
-                    "id": 1,
-                    "category": {"id": 1, "name": "Backend", "slug": "backend", "type": "SKILL"}
-                }
+                [
+                    {
+                        "name": "Python",
+                        "category_id": 1,
+                        "level": 90,
+                        "icon_url": "https://example.com/icons/python.svg",
+                        "sort_order": 1,
+                        "id": 1,
+                        "category": {"id": 1, "name": "Backend", "slug": "backend", "type": "SKILL"}
+                    }
+                ],
+                [
+                    {
+                        "name": "JavaScript",
+                        "category_id": 2,
+                        "level": 85,
+                        "icon_url": "https://example.com/icons/javascript.svg",
+                        "sort_order": 2,
+                        "id": 2,
+                        "category": {"id": 2, "name": "Frontend", "slug": "frontend", "type": "SKILL"}
+                    }
+                ]
             ],
+            "pagination": {
+                "total": 2,
+                "page": 1,
+                "limit": 10,
+                "totalPages": 1,
+                "hasNextPage": False,
+                "hasPreviousPage": False
+            },
             "timestamp": "2026-03-16T00:00:00.000Z"
         }
     }
@@ -75,14 +112,20 @@ SKILLS_LIST_EXAMPLES = {
     description="""Get all skills with optional pagination and filters.
 
     **Pagination Options:**
-    - With pagination: Provide `limit` parameter (default: 10)
-    - Without pagination: Set `limit` to `null` to get all skills
+    - Without pagination (default): Omit `limit` to get all skills
+    - With pagination: Provide `limit` parameter (e.g. `?limit=10&page=2`)
 
     **Filters:**
     - `keyword`: Search in name
     - `category`: Filter by category ID
     - `sortBy`: Field to sort by (default: sort_order)
     - `sortOrder`: ASC or DESC (default: ASC)
+    - `orderBy`: Alias for `sortOrder` (asc or desc) — overrides `sortOrder` when provided
+
+    **Grouping:**
+    - `groupBy`: Group results by a column value. `data` becomes an array of arrays.
+      Allowed columns: `name`, `level`, `category_id`, `sort_order`.
+      Works with or without pagination.
     """,
     responses={
         200: {
@@ -97,18 +140,32 @@ SKILLS_LIST_EXAMPLES = {
 )
 async def get_skills(
     page: int = Query(1, ge=1, description="Page number (only used when limit is provided)"),
-    limit: Optional[int] = Query(10, ge=1, le=100, description="Items per page. Set to null for all skills without pagination"),
+    limit: Optional[int] = Query(None, ge=1, le=100, description="Items per page. Omit or set to null for all skills without pagination"),
     sortBy: str = Query("sort_order", description="Sort field"),
-    sortOrder: str = Query("ASC", description="Sort order (ASC or DESC)"),
+    sortOrder: str = Query("ASC", description="Sort order (ASC or DESC) — overridden by orderBy when provided"),
+    orderBy: Optional[str] = Query(None, description="Sort order alias (asc or desc) — overrides sortOrder for frontend compatibility"),
     keyword: Optional[str] = Query(None, description="Search keyword for name"),
     category_id: Optional[int] = Query(None, description="Filter by category ID"),
+    groupBy: Optional[str] = Query(None, description="Group results by this column. Allowed: name, level, category_id, sort_order"),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Get all skills with optional pagination and filters.
+    Get all skills with optional pagination, filters, and grouping.
 
     Returns list of skills with or without pagination based on limit parameter.
+    When groupBy is provided, data becomes an array of arrays grouped by the column value.
     """
+    # Normalise sort order — orderBy overrides sortOrder for frontend compatibility
+    if orderBy is not None:
+        sortOrder = orderBy
+
+    # Validate groupBy column
+    if groupBy is not None and groupBy not in GROUP_BY_ALLOWED:
+        return APIResponse.error(
+            message=f"Invalid groupBy column '{groupBy}'. Allowed values: {', '.join(sorted(GROUP_BY_ALLOWED))}",
+            status=422,
+        )
+
     service = SkillService(db)
     result = await service.get_skills(
         page=page,
@@ -121,15 +178,25 @@ async def get_skills(
 
     skills_data = [SkillResponse.from_orm(skill).model_dump() for skill in result.items]
 
+    # Group by column value if groupBy is provided
+    if groupBy is not None:
+        grouped = defaultdict(list)
+        for item in skills_data:
+            key = item.get(groupBy)
+            grouped[key].append(item)
+        data = list(grouped.values())
+    else:
+        data = skills_data
+
     if limit is None:
         return APIResponse.success(
             message="Skills retrieved successfully",
-            data=skills_data,
+            data=data,
         )
     pagination = create_pagination_meta(result.total, result.page, result.limit)
     return APIResponse.success(
         message="Skills retrieved successfully",
-        data=skills_data,
+        data=data,
         pagination=pagination,
     )
 
