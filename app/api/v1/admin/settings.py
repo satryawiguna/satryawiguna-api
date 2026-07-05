@@ -27,31 +27,14 @@ _SETTINGS_DATA = {
 
 SETTINGS_GET_EXAMPLE = {
     "example": {
-        "value": {
-            "success": True,
-            "status": 200,
-            "message": "Setting retrieved successfully",
-            "data": _SETTINGS_DATA,
-            "timestamp": "2026-05-30T00:00:00.000Z",
-        }
+        "success": True,
+        "status": 200,
+        "message": "Setting retrieved successfully",
+        "data": _SETTINGS_DATA,
+        "timestamp": "2026-05-30T00:00:00.000Z",
     }
 }
 
-SETTINGS_UPDATE_EXAMPLE = {
-    "example": {
-        "value": {
-            "success": True,
-            "status": 200,
-            "message": "Setting updated successfully",
-            "data": {
-                "GITHUB_URL": "https://github.com/satryawiguna",
-                "LINKED_IN_URL": "https://linkedin.com/in/satryawiguna",
-                "RESUME_FILE_URL": "test",
-            },
-            "timestamp": "2026-05-30T00:00:00.000Z",
-        }
-    }
-}
 
 
 # ---------------------------------------------------------------------------
@@ -88,12 +71,6 @@ Supply a flat JSON object where each key is a setting name and the value is a st
 Only the keys present in the request body are updated; other existing settings are unchanged.
 New keys that do not yet exist in the database will be created automatically.
 """,
-    responses={
-        200: {
-            "description": "Setting updated successfully",
-            "content": {"application/json": SETTINGS_UPDATE_EXAMPLE},
-        }
-    },
 )
 async def update_settings(
     data: Dict[str, Optional[str]] = Body(

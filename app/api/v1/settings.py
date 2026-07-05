@@ -19,16 +19,14 @@ router = APIRouter()
 # ---------------------------------------------------------------------------
 SETTINGS_BY_KEYS_EXAMPLE = {
     "example": {
-        "value": {
-            "success": True,
-            "status": 200,
-            "message": "Setting retrieved successfully",
-            "data": {
-                "GITHUB_URL": "https://github.com/satryawiguna",
-                "LINKED_IN_URL": "https://linkedin.com/in/satryawiguna",
-            },
-            "timestamp": "2026-05-30T00:00:00.000Z",
-        }
+        "success": True,
+        "status": 200,
+        "message": "Setting retrieved successfully",
+        "data": {
+            "GITHUB_URL": "https://github.com/satryawiguna",
+            "LINKED_IN_URL": "https://linkedin.com/in/satryawiguna",
+        },
+        "timestamp": "2026-05-30T00:00:00.000Z",
     }
 }
 

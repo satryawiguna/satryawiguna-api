@@ -32,8 +32,8 @@ _EXPERIENCE_DATA = {
     "created_at": "2026-05-30T00:00:00",
     "updated_at": "2026-05-30T00:00:00",
     "skills": [
-        {"id": 1, "name": "Next.js", "icon_url": None},
-        {"id": 2, "name": "Nest.js", "icon_url": None},
+        {"id": 1, "name": "Next.js"},
+        {"id": 2, "name": "Nest.js"},
     ],
 }
 
@@ -72,50 +72,15 @@ EXPERIENCES_LIST_EXAMPLES = {
 
 EXPERIENCE_DETAIL_EXAMPLE = {
     "example": {
-        "value": {
-            "success": True,
-            "status": 200,
-            "message": "Experience retrieved successfully",
-            "data": _EXPERIENCE_DATA,
-            "timestamp": "2026-05-30T00:00:00.000Z",
-        }
+        "success": True,
+        "status": 200,
+        "message": "Experience retrieved successfully",
+        "data": _EXPERIENCE_DATA,
+        "timestamp": "2026-05-30T00:00:00.000Z",
     }
 }
 
-EXPERIENCE_CREATE_EXAMPLE = {
-    "example": {
-        "value": {
-            "success": True,
-            "status": 201,
-            "message": "Experience created successfully",
-            "data": _EXPERIENCE_DATA,
-            "timestamp": "2026-05-30T00:00:00.000Z",
-        }
-    }
-}
 
-EXPERIENCE_UPDATE_EXAMPLE = {
-    "example": {
-        "value": {
-            "success": True,
-            "status": 200,
-            "message": "Experience updated successfully",
-            "data": _EXPERIENCE_DATA,
-            "timestamp": "2026-05-30T00:00:00.000Z",
-        }
-    }
-}
-
-EXPERIENCE_DELETE_EXAMPLE = {
-    "example": {
-        "value": {
-            "success": True,
-            "status": 200,
-            "message": "Experience deleted successfully",
-            "timestamp": "2026-05-30T00:00:00.000Z",
-        }
-    }
-}
 
 
 # ---------------------------------------------------------------------------
@@ -171,17 +136,7 @@ async def get_experiences(
     )
 
 
-@router.post(
-    "",
-    summary="Create experience",
-    status_code=status.HTTP_201_CREATED,
-    responses={
-        201: {
-            "description": "Experience created successfully",
-            "content": {"application/json": EXPERIENCE_CREATE_EXAMPLE},
-        }
-    },
-)
+@router.post("", status_code=status.HTTP_201_CREATED, summary="Create experience")
 async def create_experience(
     experience_data: ExperienceCreate,
     db: AsyncSession = Depends(get_db),
@@ -221,16 +176,7 @@ async def get_experience(
     )
 
 
-@router.put(
-    "/{experience_id}",
-    summary="Update experience",
-    responses={
-        200: {
-            "description": "Experience updated successfully",
-            "content": {"application/json": EXPERIENCE_UPDATE_EXAMPLE},
-        }
-    },
-)
+@router.put("/{experience_id}", summary="Update experience")
 async def update_experience(
     experience_id: int,
     experience_data: ExperienceUpdate,
@@ -248,16 +194,7 @@ async def update_experience(
     )
 
 
-@router.delete(
-    "/{experience_id}",
-    summary="Delete experience",
-    responses={
-        200: {
-            "description": "Experience deleted successfully",
-            "content": {"application/json": EXPERIENCE_DELETE_EXAMPLE},
-        }
-    },
-)
+@router.delete("/{experience_id}", summary="Delete experience")
 async def delete_experience(
     experience_id: int,
     db: AsyncSession = Depends(get_db),
