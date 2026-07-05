@@ -9,6 +9,7 @@ from app.models.blog import BlogPost, Category, Tag, BlogPostCategory, BlogPostT
 from app.models.experience import Experience, ExperienceSkill
 from app.models.education import Education
 from app.models.strength import Strength
+from app.models.career_impact import CareerImpact
 
 __all__ = [
     # Other models
@@ -43,4 +44,7 @@ __all__ = [
 
     # Strength models
     "Strength",
+
+    # Career Impact models
+    "CareerImpact",
 ]

@@ -66,50 +66,14 @@ EDUCATIONS_LIST_EXAMPLES = {
 
 EDUCATION_DETAIL_EXAMPLE = {
     "example": {
-        "value": {
-            "success": True,
-            "status": 200,
-            "message": "Education retrieved successfully",
-            "data": _EDUCATION_DATA,
-            "timestamp": "2026-05-30T00:00:00.000Z",
-        }
+        "success": True,
+        "status": 200,
+        "message": "Education retrieved successfully",
+        "data": _EDUCATION_DATA,
+        "timestamp": "2026-05-30T00:00:00.000Z",
     }
 }
 
-EDUCATION_CREATE_EXAMPLE = {
-    "example": {
-        "value": {
-            "success": True,
-            "status": 201,
-            "message": "Education created successfully",
-            "data": _EDUCATION_DATA,
-            "timestamp": "2026-05-30T00:00:00.000Z",
-        }
-    }
-}
-
-EDUCATION_UPDATE_EXAMPLE = {
-    "example": {
-        "value": {
-            "success": True,
-            "status": 200,
-            "message": "Education updated successfully",
-            "data": _EDUCATION_DATA,
-            "timestamp": "2026-05-30T00:00:00.000Z",
-        }
-    }
-}
-
-EDUCATION_DELETE_EXAMPLE = {
-    "example": {
-        "value": {
-            "success": True,
-            "status": 200,
-            "message": "Education deleted successfully",
-            "timestamp": "2026-05-30T00:00:00.000Z",
-        }
-    }
-}
 
 
 # ---------------------------------------------------------------------------
@@ -165,17 +129,7 @@ async def get_educations(
     )
 
 
-@router.post(
-    "",
-    summary="Create education",
-    status_code=status.HTTP_201_CREATED,
-    responses={
-        201: {
-            "description": "Education created successfully",
-            "content": {"application/json": EDUCATION_CREATE_EXAMPLE},
-        }
-    },
-)
+@router.post("", status_code=status.HTTP_201_CREATED, summary="Create education")
 async def create_education(
     education_data: EducationCreate,
     db: AsyncSession = Depends(get_db),
@@ -215,16 +169,7 @@ async def get_education(
     )
 
 
-@router.put(
-    "/{education_id}",
-    summary="Update education",
-    responses={
-        200: {
-            "description": "Education updated successfully",
-            "content": {"application/json": EDUCATION_UPDATE_EXAMPLE},
-        }
-    },
-)
+@router.put("/{education_id}", summary="Update education")
 async def update_education(
     education_id: int,
     education_data: EducationUpdate,
@@ -242,16 +187,7 @@ async def update_education(
     )
 
 
-@router.delete(
-    "/{education_id}",
-    summary="Delete education",
-    responses={
-        200: {
-            "description": "Education deleted successfully",
-            "content": {"application/json": EDUCATION_DELETE_EXAMPLE},
-        }
-    },
-)
+@router.delete("/{education_id}", summary="Delete education")
 async def delete_education(
     education_id: int,
     db: AsyncSession = Depends(get_db),
