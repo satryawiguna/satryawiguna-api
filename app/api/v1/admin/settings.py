@@ -27,13 +27,11 @@ _SETTINGS_DATA = {
 
 SETTINGS_GET_EXAMPLE = {
     "example": {
-        "value": {
-            "success": True,
-            "status": 200,
-            "message": "Setting retrieved successfully",
-            "data": _SETTINGS_DATA,
-            "timestamp": "2026-05-30T00:00:00.000Z",
-        }
+        "success": True,
+        "status": 200,
+        "message": "Setting retrieved successfully",
+        "data": _SETTINGS_DATA,
+        "timestamp": "2026-05-30T00:00:00.000Z",
     }
 }
 
