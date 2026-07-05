@@ -80,24 +80,7 @@ EXPERIENCE_DETAIL_EXAMPLE = {
     }
 }
 
-EXPERIENCE_UPDATE_EXAMPLE = {
-    "example": {
-        "success": True,
-        "status": 200,
-        "message": "Experience updated successfully",
-        "data": _EXPERIENCE_DATA,
-        "timestamp": "2026-05-30T00:00:00.000Z",
-    }
-}
 
-EXPERIENCE_DELETE_EXAMPLE = {
-    "example": {
-        "success": True,
-        "status": 200,
-        "message": "Experience deleted successfully",
-        "timestamp": "2026-05-30T00:00:00.000Z",
-    }
-}
 
 
 # ---------------------------------------------------------------------------
@@ -193,16 +176,7 @@ async def get_experience(
     )
 
 
-@router.put(
-    "/{experience_id}",
-    summary="Update experience",
-    responses={
-        200: {
-            "description": "Experience updated successfully",
-            "content": {"application/json": EXPERIENCE_UPDATE_EXAMPLE},
-        }
-    },
-)
+@router.put("/{experience_id}", summary="Update experience")
 async def update_experience(
     experience_id: int,
     experience_data: ExperienceUpdate,
@@ -220,16 +194,7 @@ async def update_experience(
     )
 
 
-@router.delete(
-    "/{experience_id}",
-    summary="Delete experience",
-    responses={
-        200: {
-            "description": "Experience deleted successfully",
-            "content": {"application/json": EXPERIENCE_DELETE_EXAMPLE},
-        }
-    },
-)
+@router.delete("/{experience_id}", summary="Delete experience")
 async def delete_experience(
     experience_id: int,
     db: AsyncSession = Depends(get_db),
