@@ -32,8 +32,8 @@ _EXPERIENCE_DATA = {
     "created_at": "2026-05-30T00:00:00",
     "updated_at": "2026-05-30T00:00:00",
     "skills": [
-        {"id": 1, "name": "Next.js", "icon_url": None},
-        {"id": 2, "name": "Nest.js", "icon_url": None},
+        {"id": 1, "name": "Next.js"},
+        {"id": 2, "name": "Nest.js"},
     ],
 }
 
@@ -72,36 +72,30 @@ EXPERIENCES_LIST_EXAMPLES = {
 
 EXPERIENCE_DETAIL_EXAMPLE = {
     "example": {
-        "value": {
-            "success": True,
-            "status": 200,
-            "message": "Experience retrieved successfully",
-            "data": _EXPERIENCE_DATA,
-            "timestamp": "2026-05-30T00:00:00.000Z",
-        }
+        "success": True,
+        "status": 200,
+        "message": "Experience retrieved successfully",
+        "data": _EXPERIENCE_DATA,
+        "timestamp": "2026-05-30T00:00:00.000Z",
     }
 }
 
 EXPERIENCE_UPDATE_EXAMPLE = {
     "example": {
-        "value": {
-            "success": True,
-            "status": 200,
-            "message": "Experience updated successfully",
-            "data": _EXPERIENCE_DATA,
-            "timestamp": "2026-05-30T00:00:00.000Z",
-        }
+        "success": True,
+        "status": 200,
+        "message": "Experience updated successfully",
+        "data": _EXPERIENCE_DATA,
+        "timestamp": "2026-05-30T00:00:00.000Z",
     }
 }
 
 EXPERIENCE_DELETE_EXAMPLE = {
     "example": {
-        "value": {
-            "success": True,
-            "status": 200,
-            "message": "Experience deleted successfully",
-            "timestamp": "2026-05-30T00:00:00.000Z",
-        }
+        "success": True,
+        "status": 200,
+        "message": "Experience deleted successfully",
+        "timestamp": "2026-05-30T00:00:00.000Z",
     }
 }
 
