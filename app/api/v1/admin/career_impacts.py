@@ -76,40 +76,6 @@ CAREER_IMPACT_DETAIL_EXAMPLE = {
     }
 }
 
-CAREER_IMPACT_CREATE_EXAMPLE = {
-    "example": {
-        "value": {
-            "success": True,
-            "status": 201,
-            "message": "Career impact created successfully",
-            "data": _CAREER_IMPACT_DATA,
-            "timestamp": "2026-07-04T00:00:00.000Z",
-        }
-    }
-}
-
-CAREER_IMPACT_UPDATE_EXAMPLE = {
-    "example": {
-        "value": {
-            "success": True,
-            "status": 200,
-            "message": "Career impact updated successfully",
-            "data": _CAREER_IMPACT_DATA,
-            "timestamp": "2026-07-04T00:00:00.000Z",
-        }
-    }
-}
-
-CAREER_IMPACT_DELETE_EXAMPLE = {
-    "example": {
-        "value": {
-            "success": True,
-            "status": 200,
-            "message": "Career impact deleted successfully",
-            "timestamp": "2026-07-04T00:00:00.000Z",
-        }
-    }
-}
 
 
 # ---------------------------------------------------------------------------
@@ -166,17 +132,7 @@ async def get_career_impacts(
     )
 
 
-@router.post(
-    "",
-    summary="Create career impact",
-    status_code=status.HTTP_201_CREATED,
-    responses={
-        201: {
-            "description": "Career impact created successfully",
-            "content": {"application/json": CAREER_IMPACT_CREATE_EXAMPLE},
-        }
-    },
-)
+@router.post("", status_code=status.HTTP_201_CREATED, summary="Create career impact")
 async def create_career_impact(
     career_impact_data: CareerImpactCreate,
     db: AsyncSession = Depends(get_db),
@@ -216,16 +172,7 @@ async def get_career_impact(
     )
 
 
-@router.put(
-    "/{career_impact_id}",
-    summary="Update career impact",
-    responses={
-        200: {
-            "description": "Career impact updated successfully",
-            "content": {"application/json": CAREER_IMPACT_UPDATE_EXAMPLE},
-        }
-    },
-)
+@router.put("/{career_impact_id}", summary="Update career impact")
 async def update_career_impact(
     career_impact_id: int,
     career_impact_data: CareerImpactUpdate,
@@ -243,16 +190,7 @@ async def update_career_impact(
     )
 
 
-@router.delete(
-    "/{career_impact_id}",
-    summary="Delete career impact",
-    responses={
-        200: {
-            "description": "Career impact deleted successfully",
-            "content": {"application/json": CAREER_IMPACT_DELETE_EXAMPLE},
-        }
-    },
-)
+@router.delete("/{career_impact_id}", summary="Delete career impact")
 async def delete_career_impact(
     career_impact_id: int,
     db: AsyncSession = Depends(get_db),

@@ -73,40 +73,6 @@ STRENGTH_DETAIL_EXAMPLE = {
     }
 }
 
-STRENGTH_CREATE_EXAMPLE = {
-    "example": {
-        "value": {
-            "success": True,
-            "status": 201,
-            "message": "Strength created successfully",
-            "data": _STRENGTH_DATA,
-            "timestamp": "2026-07-04T00:00:00.000Z",
-        }
-    }
-}
-
-STRENGTH_UPDATE_EXAMPLE = {
-    "example": {
-        "value": {
-            "success": True,
-            "status": 200,
-            "message": "Strength updated successfully",
-            "data": _STRENGTH_DATA,
-            "timestamp": "2026-07-04T00:00:00.000Z",
-        }
-    }
-}
-
-STRENGTH_DELETE_EXAMPLE = {
-    "example": {
-        "value": {
-            "success": True,
-            "status": 200,
-            "message": "Strength deleted successfully",
-            "timestamp": "2026-07-04T00:00:00.000Z",
-        }
-    }
-}
 
 
 # ---------------------------------------------------------------------------
@@ -163,17 +129,7 @@ async def get_strengths(
     )
 
 
-@router.post(
-    "",
-    summary="Create strength",
-    status_code=status.HTTP_201_CREATED,
-    responses={
-        201: {
-            "description": "Strength created successfully",
-            "content": {"application/json": STRENGTH_CREATE_EXAMPLE},
-        }
-    },
-)
+@router.post("", status_code=status.HTTP_201_CREATED, summary="Create strength")
 async def create_strength(
     strength_data: StrengthCreate,
     db: AsyncSession = Depends(get_db),
@@ -213,16 +169,7 @@ async def get_strength(
     )
 
 
-@router.put(
-    "/{strength_id}",
-    summary="Update strength",
-    responses={
-        200: {
-            "description": "Strength updated successfully",
-            "content": {"application/json": STRENGTH_UPDATE_EXAMPLE},
-        }
-    },
-)
+@router.put("/{strength_id}", summary="Update strength")
 async def update_strength(
     strength_id: int,
     strength_data: StrengthUpdate,
@@ -240,16 +187,7 @@ async def update_strength(
     )
 
 
-@router.delete(
-    "/{strength_id}",
-    summary="Delete strength",
-    responses={
-        200: {
-            "description": "Strength deleted successfully",
-            "content": {"application/json": STRENGTH_DELETE_EXAMPLE},
-        }
-    },
-)
+@router.delete("/{strength_id}", summary="Delete strength")
 async def delete_strength(
     strength_id: int,
     db: AsyncSession = Depends(get_db),
