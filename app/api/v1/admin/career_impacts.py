@@ -66,13 +66,11 @@ CAREER_IMPACTS_LIST_EXAMPLES = {
 
 CAREER_IMPACT_DETAIL_EXAMPLE = {
     "example": {
-        "value": {
-            "success": True,
-            "status": 200,
-            "message": "Career impact retrieved successfully",
-            "data": _CAREER_IMPACT_DATA,
-            "timestamp": "2026-07-04T00:00:00.000Z",
-        }
+        "success": True,
+        "status": 200,
+        "message": "Career impact retrieved successfully",
+        "data": _CAREER_IMPACT_DATA,
+        "timestamp": "2026-07-04T00:00:00.000Z",
     }
 }
 

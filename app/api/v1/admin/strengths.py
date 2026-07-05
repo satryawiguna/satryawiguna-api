@@ -63,13 +63,11 @@ STRENGTHS_LIST_EXAMPLES = {
 
 STRENGTH_DETAIL_EXAMPLE = {
     "example": {
-        "value": {
-            "success": True,
-            "status": 200,
-            "message": "Strength retrieved successfully",
-            "data": _STRENGTH_DATA,
-            "timestamp": "2026-07-04T00:00:00.000Z",
-        }
+        "success": True,
+        "status": 200,
+        "message": "Strength retrieved successfully",
+        "data": _STRENGTH_DATA,
+        "timestamp": "2026-07-04T00:00:00.000Z",
     }
 }
 

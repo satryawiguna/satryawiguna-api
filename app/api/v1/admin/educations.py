@@ -66,13 +66,11 @@ EDUCATIONS_LIST_EXAMPLES = {
 
 EDUCATION_DETAIL_EXAMPLE = {
     "example": {
-        "value": {
-            "success": True,
-            "status": 200,
-            "message": "Education retrieved successfully",
-            "data": _EDUCATION_DATA,
-            "timestamp": "2026-05-30T00:00:00.000Z",
-        }
+        "success": True,
+        "status": 200,
+        "message": "Education retrieved successfully",
+        "data": _EDUCATION_DATA,
+        "timestamp": "2026-05-30T00:00:00.000Z",
     }
 }
 
