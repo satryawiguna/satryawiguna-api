@@ -82,18 +82,6 @@ EXPERIENCE_DETAIL_EXAMPLE = {
     }
 }
 
-EXPERIENCE_CREATE_EXAMPLE = {
-    "example": {
-        "value": {
-            "success": True,
-            "status": 201,
-            "message": "Experience created successfully",
-            "data": _EXPERIENCE_DATA,
-            "timestamp": "2026-05-30T00:00:00.000Z",
-        }
-    }
-}
-
 EXPERIENCE_UPDATE_EXAMPLE = {
     "example": {
         "value": {
@@ -171,17 +159,7 @@ async def get_experiences(
     )
 
 
-@router.post(
-    "",
-    summary="Create experience",
-    status_code=status.HTTP_201_CREATED,
-    responses={
-        201: {
-            "description": "Experience created successfully",
-            "content": {"application/json": EXPERIENCE_CREATE_EXAMPLE},
-        }
-    },
-)
+@router.post("", status_code=status.HTTP_201_CREATED, summary="Create experience")
 async def create_experience(
     experience_data: ExperienceCreate,
     db: AsyncSession = Depends(get_db),
