@@ -10,6 +10,7 @@ from app.models.experience import Experience, ExperienceSkill
 from app.models.education import Education
 from app.models.strength import Strength
 from app.models.career_impact import CareerImpact
+from app.models.subscription import Subscription
 
 __all__ = [
     # Other models
@@ -47,4 +48,7 @@ __all__ = [
 
     # Career Impact models
     "CareerImpact",
+
+    # Subscription models
+    "Subscription",
 ]
