@@ -19,8 +19,13 @@ class BlogPostService:
         self.db = db
         self.blog_post_repository = BlogPostRepository(db)
 
-    async def get_blog_post_by_id(self, post_id: int) -> Optional[BlogPost]:
-        return await self.blog_post_repository.get_by_id_with_relations(post_id)
+    async def get_blog_post_by_id(self, post_id: int, published_only: bool = False) -> Optional[BlogPost]:
+        post = await self.blog_post_repository.get_by_id_with_relations(post_id)
+        if not post:
+            return None
+        if published_only and post.status != "published":
+            return None
+        return post
 
     async def get_blog_post_by_slug(self, slug: str) -> Optional[BlogPost]:
         return await self.blog_post_repository.get_by_slug(slug)

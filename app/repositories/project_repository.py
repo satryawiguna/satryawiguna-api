@@ -30,8 +30,8 @@ class ProjectRepository(BaseRepository[Project]):
         )
         return result.scalar_one_or_none()
 
-    async def get_by_id_with_relations(self, project_id: int) -> Optional[Project]:
-        result = await self.db.execute(
+    async def get_by_id_with_relations(self, project_id: int, published_only: bool = False) -> Optional[Project]:
+        stmt = (
             select(Project)
             .options(
                 selectinload(Project.project_images),
@@ -40,6 +40,9 @@ class ProjectRepository(BaseRepository[Project]):
             )
             .where(Project.id == project_id)
         )
+        if published_only:
+            stmt = stmt.where(Project.published_at.isnot(None))
+        result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
     async def get_paginated(
@@ -51,6 +54,7 @@ class ProjectRepository(BaseRepository[Project]):
         keyword: Optional[str] = None,
         category_id: Optional[int] = None,
         skill_id: Optional[int] = None,
+        published_only: bool = False,
         **filters,
     ) -> PaginatedResult:
         sort_column = getattr(Project, sort_by, Project.id)
@@ -84,6 +88,9 @@ class ProjectRepository(BaseRepository[Project]):
                     (ProjectSkill.skill_id == skill_id)
                 )
             )
+
+        if published_only:
+            stmt = stmt.where(Project.published_at.isnot(None))
 
         return await paginate_async(self.db, stmt, page=page, limit=limit)
 
