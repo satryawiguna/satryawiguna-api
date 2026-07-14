@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     # CORS
     CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:3001", "http://localhost:8000"]
     
+    # Frontend — used to build verification links in emails (no API URL leak)
+    FRONTEND_URL: str = "https://dev.satryawiguna.me"
+    
     # DigitalOcean Spaces (S3-compatible storage)
     SPACES_ACCESS_KEY: str = ""
     SPACES_SECRET_KEY: str = ""
