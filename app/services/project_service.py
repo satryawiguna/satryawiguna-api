@@ -19,8 +19,8 @@ class ProjectService:
         self.db = db
         self.project_repository = ProjectRepository(db)
 
-    async def get_project_by_id(self, project_id: int) -> Optional[Project]:
-        return await self.project_repository.get_by_id_with_relations(project_id)
+    async def get_project_by_id(self, project_id: int, published_only: bool = False) -> Optional[Project]:
+        return await self.project_repository.get_by_id_with_relations(project_id, published_only=published_only)
 
     async def get_project_by_slug(self, slug: str) -> Optional[Project]:
         return await self.project_repository.get_by_slug(slug)
@@ -34,6 +34,7 @@ class ProjectService:
         keyword: Optional[str] = None,
         category_id: Optional[int] = None,
         skill_id: Optional[int] = None,
+        published_only: bool = False,
     ) -> PaginatedResult:
         return await self.project_repository.get_paginated(
             page=page,
@@ -43,6 +44,7 @@ class ProjectService:
             keyword=keyword,
             category_id=category_id,
             skill_id=skill_id,
+            published_only=published_only,
         )
 
     async def _sync_relations(self, project: Project, skill_ids, image_urls, category_ids):

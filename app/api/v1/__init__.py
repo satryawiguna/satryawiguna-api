@@ -3,8 +3,9 @@ API v1 router configuration
 """
 from fastapi import APIRouter
 
-from app.api.v1 import blog_posts, auth, media, projects, skills, categories, tags, experiences, educations, settings, strengths, career_impacts
+from app.api.v1 import blog_posts, auth, media, projects, skills, categories, tags, experiences, educations, settings, strengths, career_impacts, subscriptions
 from app.api.v1.admin import users as admin_users
+from app.api.v1.admin import subscriptions as admin_subscriptions
 from app.api.v1.admin import projects as admin_projects
 from app.api.v1.admin import blog_posts as admin_blog_posts
 from app.api.v1.admin import skills as admin_skills
@@ -33,6 +34,7 @@ api_router.include_router(admin_educations.router, prefix="/admin/educations", t
 api_router.include_router(admin_settings.router, prefix="/admin/settings", tags=["Admin - Settings"])
 api_router.include_router(admin_strengths.router, prefix="/admin/strengths", tags=["Admin - Strengths"])
 api_router.include_router(admin_career_impacts.router, prefix="/admin/career-impacts", tags=["Admin - Career Impacts"])
+api_router.include_router(admin_subscriptions.router, prefix="/admin/subscriptions", tags=["Admin - Subscriptions"])
 api_router.include_router(projects.router, prefix="/projects", tags=["Projects"])
 api_router.include_router(blog_posts.router, prefix="/blog-posts", tags=["Blog Posts"])
 api_router.include_router(media.router, prefix="/media", tags=["Media Library"])
@@ -44,3 +46,4 @@ api_router.include_router(educations.router, prefix="/educations", tags=["Educat
 api_router.include_router(settings.router, prefix="/settings", tags=["Settings"])
 api_router.include_router(strengths.router, prefix="/strengths", tags=["Strengths"])
 api_router.include_router(career_impacts.router, prefix="/career-impacts", tags=["Career Impacts"])
+api_router.include_router(subscriptions.router, prefix="/subscriptions", tags=["Subscriptions"])

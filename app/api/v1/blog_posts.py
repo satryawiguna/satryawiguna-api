@@ -14,20 +14,19 @@ from app.utils.response import APIResponse, create_pagination_meta
 router = APIRouter()
 
 
-@router.get("", summary="Get all blog posts (public)")
+@router.get("", summary="Get all published blog posts (public)")
 async def get_blog_posts(
     page: int = Query(1, ge=1),
     limit: Optional[int] = Query(10, ge=1, le=100),
     sortBy: str = Query("created_at"),
     sortOrder: str = Query("DESC"),
     keyword: Optional[str] = Query(None),
-    status_filter: Optional[str] = Query(None, alias="status"),
     db: AsyncSession = Depends(get_db),
 ):
     service = BlogPostService(db)
     result = await service.get_blog_posts(
         page=page, limit=limit, sort_by=sortBy, sort_order=sortOrder,
-        keyword=keyword, status=status_filter,
+        keyword=keyword, status="published",
     )
     posts_data = [BlogPostResponse.from_orm(post).model_dump() for post in result.items]
     if limit is None:
@@ -42,7 +41,7 @@ async def get_blog_post(
     db: AsyncSession = Depends(get_db),
 ):
     service = BlogPostService(db)
-    post = await service.get_blog_post_by_id(post_id)
+    post = await service.get_blog_post_by_id(post_id, published_only=True)
     if not post:
         return APIResponse.error(message="Blog post not found", status=status.HTTP_404_NOT_FOUND)
     return APIResponse.success(message="Blog post retrieved successfully", data=BlogPostResponse.from_orm(post).model_dump())

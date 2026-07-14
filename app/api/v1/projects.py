@@ -26,6 +26,7 @@ async def get_projects(
     service = ProjectService(db)
     result = await service.get_projects(
         page=page, limit=limit, sort_by=sortBy, sort_order=sortOrder, keyword=keyword,
+        published_only=True,
     )
     projects_data = [ProjectResponse.from_orm(p).model_dump() for p in result.items]
     if limit is None:
@@ -40,7 +41,7 @@ async def get_project(
     db: AsyncSession = Depends(get_db),
 ):
     service = ProjectService(db)
-    project = await service.get_project_by_id(project_id)
+    project = await service.get_project_by_id(project_id, published_only=True)
     if not project:
         return APIResponse.error(message="Project not found", status=status.HTTP_404_NOT_FOUND)
     return APIResponse.success(message="Project retrieved successfully", data=ProjectResponse.from_orm(project).model_dump())

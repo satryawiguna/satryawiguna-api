@@ -303,3 +303,192 @@ async def _send_via_smtp(email: str, otp: str) -> bool:
     except Exception as e:
         logger.error(f"Failed to send OTP email to {email} via SMTP: {str(e)}")
         return False
+
+
+# ------------------------------------------------------------------
+# Subscription verification email
+# ------------------------------------------------------------------
+
+
+def _build_verification_html(email: str, verification_url: str) -> str:
+    """Build the subscription verification email HTML template.
+
+    Layout structure (600px card):
+      1. Header bar – brand
+      2. Welcome section
+      3. Call-to-action button (Verify Subscription)
+      4. Fallback link
+      5. Footer
+    """
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background-color:#F1F5F9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#F1F5F9;padding:48px 0;">
+<tr><td align="center">
+
+<table width="600" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF;border-radius:12px;overflow:hidden;">
+
+<!-- HEADER -->
+<tr>
+  <td style="background-color:#0F172A;padding:24px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="left" style="font-size:18px;font-weight:700;color:#FFFFFF;letter-spacing:-0.3px;">Satrya Wiguna</td>
+    </tr>
+    </table>
+  </td>
+</tr>
+
+<!-- CONTENT -->
+<tr>
+  <td style="padding:48px 24px 36px 24px;">
+    <h1 style="margin:0;font-size:28px;font-weight:700;color:#0F172A;line-height:1.2;">Stay Synchronized</h1>
+    <p style="margin:16px 0 0 0;font-size:15px;color:#475569;line-height:1.6;">
+      Hey there,<br><br>
+      Thanks for subscribing with <strong style="color:#0F172A;">{email}</strong>! You&#8217;re now one step away from
+      getting notified when new technical logs are published.
+    </p>
+    <p style="margin:16px 0 0 0;font-size:15px;color:#475569;line-height:1.6;">
+      Click the button below to confirm your subscription:
+    </p>
+
+    <!-- CTA BUTTON -->
+    <table cellpadding="0" cellspacing="0" style="margin:32px auto;">
+    <tr>
+      <td style="background-color:#22C55E;border-radius:8px;text-align:center;">
+        <a href="{verification_url}" target="_blank"
+           style="display:inline-block;padding:14px 40px;font-size:16px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:8px;">
+          Verify Subscription
+        </a>
+      </td>
+    </tr>
+    </table>
+
+    <!-- FALLBACK LINK -->
+    <p style="margin:24px 0 0 0;font-size:13px;color:#94A3B8;line-height:1.5;word-break:break-all;">
+      If the button doesn&#8217;t work, copy and paste this link into your browser:<br>
+      <a href="{verification_url}" style="color:#3B82F6;">{verification_url}</a>
+    </p>
+
+    <p style="margin:32px 0 0 0;font-size:14px;color:#64748B;line-height:1.6;">
+      No spam, only signal. If you didn&#8217;t request this, you can safely ignore this email.
+    </p>
+  </td>
+</tr>
+
+</table>
+
+<!-- FOOTER -->
+<table width="600" cellpadding="0" cellspacing="0" style="margin-top:28px;">
+<tr>
+  <td style="text-align:center;padding:0 24px;">
+    <p style="margin:0;font-size:12px;color:#94A3B8;">
+      <span style="color:#64748B;">Satrya Wiguna</span>
+      &nbsp;&middot;&nbsp;
+      <span style="color:#64748B;">Portfolio</span>
+      &nbsp;&middot;&nbsp;
+      <span style="color:#64748B;">Privacy Policy</span>
+    </p>
+    <p style="margin:10px 0 6px 0;font-size:11px;color:#94A3B8;">
+      &copy; 2026 Satrya Wiguna. All rights reserved.
+    </p>
+    <p style="margin:0;font-size:11px;color:#CBD5E1;">
+      This is an automated message &mdash; please do not reply.
+    </p>
+  </td>
+</tr>
+</table>
+
+</td></tr>
+</table>
+</body>
+</html>"""
+
+
+async def send_verification_email(email: str, verification_url: str) -> bool:
+    """
+    Send subscription verification email.
+    Uses Brevo HTTP API if BREVO_API_KEY is set, falls back to SMTP.
+    """
+    if settings.BREVO_API_KEY:
+        return await _send_verification_via_brevo_api(email, verification_url)
+    return await _send_verification_via_smtp(email, verification_url)
+
+
+async def _send_verification_via_brevo_api(email: str, verification_url: str) -> bool:
+    html_content = _build_verification_html(email, verification_url)
+    payload = {
+        "sender": {
+            "name": settings.SMTP_FROM_NAME,
+            "email": settings.SMTP_FROM_EMAIL,
+        },
+        "to": [{"email": email}],
+        "subject": "Verify Your Subscription - Satrya Wiguna",
+        "htmlContent": html_content,
+        "textContent": (
+            f"STAY SYNCHRONIZED\n"
+            f"=================\n\n"
+            f"Thanks for subscribing, {email}!\n\n"
+            f"Click the link below to confirm your subscription:\n\n"
+            f"{verification_url}\n\n"
+            f"If you didn't request this, you can safely ignore this email.\n\n"
+            f"--\n"
+            f"Satrya Wiguna\n"
+            f"This is an automated message — please do not reply."
+        ),
+    }
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                "https://api.brevo.com/v3/smtp/email",
+                json=payload,
+                headers={
+                    "api-key": settings.BREVO_API_KEY,
+                    "Content-Type": "application/json",
+                },
+            )
+            response.raise_for_status()
+        logger.info(f"Verification email sent to {email} via Brevo API")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send verification email to {email} via Brevo API: {str(e)}")
+        return False
+
+
+async def _send_verification_via_smtp(email: str, verification_url: str) -> bool:
+    html_content = _build_verification_html(email, verification_url)
+    message = MIMEMultipart("alternative")
+    message["From"] = f"{settings.SMTP_FROM_NAME} <{settings.SMTP_FROM_EMAIL}>"
+    message["To"] = email
+    message["Subject"] = "Verify Your Subscription - Satrya Wiguna"
+    message.attach(MIMEText(
+        f"STAY SYNCHRONIZED\n"
+        f"=================\n\n"
+        f"Thanks for subscribing, {email}!\n\n"
+        f"Click the link below to confirm your subscription:\n\n"
+        f"{verification_url}\n\n"
+        f"If you didn't request this, you can safely ignore this email.\n\n"
+        f"--\n"
+        f"Satrya Wiguna\n"
+        f"This is an automated message — please do not reply.",
+        "plain",
+    ))
+    message.attach(MIMEText(html_content, "html"))
+    try:
+        await aiosmtplib.send(
+            message,
+            hostname=settings.SMTP_HOST,
+            port=settings.SMTP_PORT,
+            username=settings.SMTP_USERNAME,
+            password=settings.SMTP_PASSWORD,
+            start_tls=True,
+        )
+        logger.info(f"Verification email sent to {email} via SMTP")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send verification email to {email} via SMTP: {str(e)}")
+        return False
