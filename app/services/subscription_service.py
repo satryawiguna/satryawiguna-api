@@ -5,9 +5,8 @@ import logging
 import secrets
 from typing import Optional
 from datetime import datetime
-from sqlalchemy.ext.asyncio import AsyncSession
 
-logger = logging.getLogger(__name__)
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError, DuplicateError
 from app.core.config import settings
@@ -15,6 +14,8 @@ from app.models.subscription import Subscription
 from app.repositories.subscription_repository import SubscriptionRepository
 from app.utils.email import send_verification_email
 from app.utils.pagination import PaginatedResult
+
+logger = logging.getLogger(__name__)
 
 
 class SubscriptionService:
