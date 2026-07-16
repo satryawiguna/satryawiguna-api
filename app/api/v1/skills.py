@@ -16,6 +16,9 @@ from app.utils.response import APIResponse, create_pagination_meta
 # Allowed columns for groupBy
 GROUP_BY_ALLOWED = {"name", "level", "category_id", "sort_order"}
 
+# Allowed level operators
+LEVEL_OPERATORS = {"eq", "lt", "lte", "gt", "gte"}
+
 router = APIRouter()
 
 
@@ -58,6 +61,25 @@ SKILLS_LIST_EXAMPLES = {
             "status": 200,
             "message": "Skills retrieved successfully",
             "data": [_SKILL_DATA],
+            "timestamp": "2026-03-16T00:00:00.000Z"
+        }
+    },
+    "level_filtered": {
+        "summary": "Filtered by level (gte 80)",
+        "description": "Response filtered by level >= 80 using level=80&level_operator=gte",
+        "value": {
+            "success": True,
+            "status": 200,
+            "message": "Skills retrieved successfully",
+            "data": [_SKILL_DATA],
+            "pagination": {
+                "total": 1,
+                "page": 1,
+                "limit": 10,
+                "totalPages": 1,
+                "hasNextPage": False,
+                "hasPreviousPage": False
+            },
             "timestamp": "2026-03-16T00:00:00.000Z"
         }
     },
@@ -118,6 +140,11 @@ SKILLS_LIST_EXAMPLES = {
     **Filters:**
     - `keyword`: Search in name
     - `category`: Filter by category ID
+    - `level`: Filter by level value (e.g. `?level=80`)
+    - `level_operator`: Comparison operator (default: `eq`).
+      Allowed: `eq` (equal), `lt` (less than), `lte` (less than or equal),
+      `gt` (greater than), `gte` (greater than or equal).
+      Example: `?level=80&level_operator=gte` returns skills with level >= 80.
     - `sortBy`: Field to sort by (default: sort_order)
     - `sortOrder`: ASC or DESC (default: ASC)
     - `orderBy`: Alias for `sortOrder` (asc or desc) — overrides `sortOrder` when provided
@@ -146,6 +173,8 @@ async def get_skills(
     orderBy: Optional[str] = Query(None, description="Sort order alias (asc or desc) — overrides sortOrder for frontend compatibility"),
     keyword: Optional[str] = Query(None, description="Search keyword for name"),
     category_id: Optional[int] = Query(None, description="Filter by category ID"),
+    level: Optional[int] = Query(None, ge=0, le=100, description="Filter by level value. Use with level_operator to specify comparison type."),
+    level_operator: str = Query("eq", description="Comparison operator for level filter. Allowed: eq, lt, lte, gt, gte"),
     groupBy: Optional[str] = Query(None, description="Group results by this column. Allowed: name, level, category_id, sort_order"),
     db: AsyncSession = Depends(get_db),
 ):
@@ -158,6 +187,13 @@ async def get_skills(
     # Normalise sort order — orderBy overrides sortOrder for frontend compatibility
     if orderBy is not None:
         sortOrder = orderBy
+
+    # Validate level_operator
+    if level is not None and level_operator not in LEVEL_OPERATORS:
+        return APIResponse.error(
+            message=f"Invalid level_operator '{level_operator}'. Allowed values: {', '.join(sorted(LEVEL_OPERATORS))}",
+            status=422,
+        )
 
     # Validate groupBy column
     if groupBy is not None and groupBy not in GROUP_BY_ALLOWED:
@@ -174,6 +210,8 @@ async def get_skills(
         sort_order=sortOrder,
         keyword=keyword,
         category_id=category_id,
+        level=level,
+        level_operator=level_operator,
     )
 
     skills_data = [SkillResponse.from_orm(skill).model_dump() for skill in result.items]
