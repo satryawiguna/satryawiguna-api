@@ -13,6 +13,9 @@ from app.api.dependencies import get_current_user
 from app.models.user import User
 
 
+# Allowed level operators
+LEVEL_OPERATORS = {"eq", "lt", "lte", "gt", "gte"}
+
 router = APIRouter()
 
 _SKILL_DATA = {
@@ -51,6 +54,21 @@ SKILLS_LIST_EXAMPLES = {
             "data": [_SKILL_DATA],
             "timestamp": "2026-03-16T00:00:00.000Z"
         }
+    },
+    "level_filtered": {
+        "summary": "Filtered by level (gte 80)",
+        "description": "Response filtered by level >= 80 using level=80&level_operator=gte",
+        "value": {
+            "success": True,
+            "status": 200,
+            "message": "Skills retrieved successfully",
+            "data": [_SKILL_DATA],
+            "pagination": {
+                "total": 1, "page": 1, "limit": 10,
+                "totalPages": 1, "hasNextPage": False, "hasPreviousPage": False
+            },
+            "timestamp": "2026-03-16T00:00:00.000Z"
+        }
     }
 }
 
@@ -58,7 +76,7 @@ SKILLS_LIST_EXAMPLES = {
 @router.get(
     "",
     summary="Get all skills",
-    description="Get all skills with optional pagination, keyword, and category filter.",
+    description="Get all skills with optional pagination, keyword, category filter, and dynamic level filter.",
     responses={
         200: {
             "description": "Skills retrieved successfully",
@@ -73,12 +91,22 @@ async def get_skills(
     sortOrder: str = Query("ASC"),
     keyword: Optional[str] = Query(None),
     category_id: Optional[int] = Query(None, description="Filter by category ID"),
+    level: Optional[int] = Query(None, ge=0, le=100, description="Filter by level value. Use with level_operator to specify comparison type."),
+    level_operator: str = Query("eq", description="Comparison operator for level filter. Allowed: eq, lt, lte, gt, gte"),
     db: AsyncSession = Depends(get_db),
 ):
+    # Validate level_operator
+    if level is not None and level_operator not in LEVEL_OPERATORS:
+        return APIResponse.error(
+            message=f"Invalid level_operator '{level_operator}'. Allowed values: {', '.join(sorted(LEVEL_OPERATORS))}",
+            status=422,
+        )
+
     service = SkillService(db)
     result = await service.get_skills(
         page=page, limit=limit, sort_by=sortBy, sort_order=sortOrder,
         keyword=keyword, category_id=category_id,
+        level=level, level_operator=level_operator,
     )
     skills_data = [SkillResponse.from_orm(skill).model_dump() for skill in result.items]
     if limit is None:
