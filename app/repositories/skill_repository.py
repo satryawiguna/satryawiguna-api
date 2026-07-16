@@ -12,6 +12,17 @@ from app.repositories.base import BaseRepository
 from app.utils.pagination import PaginatedResult, paginate_async
 
 
+# Operator mapping for level filtering
+# Maps operator names to SQLAlchemy column dunder methods
+LEVEL_OPERATORS = {
+    "eq": "__eq__",
+    "lt": "__lt__",
+    "lte": "__le__",
+    "gt": "__gt__",
+    "gte": "__ge__",
+}
+
+
 class SkillRepository(BaseRepository[Skill]):
     """Repository for Skill model"""
 
@@ -34,6 +45,8 @@ class SkillRepository(BaseRepository[Skill]):
         sort_order: str = "ASC",
         keyword: Optional[str] = None,
         category_id: Optional[int] = None,
+        level: Optional[int] = None,
+        level_operator: str = "eq",
         **filters,
     ) -> PaginatedResult:
         sort_column = getattr(Skill, sort_by, Skill.sort_order)
@@ -45,6 +58,9 @@ class SkillRepository(BaseRepository[Skill]):
             stmt = stmt.where(Skill.name.ilike(pattern))
         if category_id is not None:
             stmt = stmt.where(Skill.category_id == category_id)
+        if level is not None:
+            op_method = LEVEL_OPERATORS.get(level_operator, "__eq__")
+            stmt = stmt.where(getattr(Skill.level, op_method)(level))
 
         return await paginate_async(self.db, stmt, page=page, limit=limit)
 
