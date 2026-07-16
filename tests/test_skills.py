@@ -206,6 +206,190 @@ class TestDeleteSkill:
 
 
 # ---------------------------------------------------------------------------
+# Level filter (admin route: /api/v1/admin/skills)
+# ---------------------------------------------------------------------------
+
+
+class TestGetSkillsLevelFilter:
+    """Tests for level and level_operator filtering on GET /api/v1/admin/skills"""
+
+    @pytest.fixture()
+    async def skills_with_levels(self, db: AsyncSession) -> list[Skill]:
+        """Create skills with varying levels for filter testing."""
+        skills = [
+            Skill(name="Beginner", category_id=None, level=20, sort_order=1),
+            Skill(name="Intermediate", category_id=None, level=50, sort_order=2),
+            Skill(name="Advanced", category_id=None, level=80, sort_order=3),
+            Skill(name="Expert", category_id=None, level=95, sort_order=4),
+            Skill(name="NullLevel", category_id=None, level=None, sort_order=5),
+            Skill(name="ZeroLevel", category_id=None, level=0, sort_order=6),
+        ]
+        for s in skills:
+            db.add(s)
+        await db.commit()
+        for s in skills:
+            await db.refresh(s)
+        return skills
+
+    async def test_level_eq(
+        self, client: AsyncClient, skills_with_levels: list[Skill]
+    ):
+        """level_operator=eq (default) should return exact match."""
+        response = await client.get(
+            "/api/v1/admin/skills",
+            params={"level": 80, "level_operator": "eq"},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success"] is True
+        names = [s["name"] for s in body["data"]]
+        assert "Advanced" in names
+        assert "Beginner" not in names
+        assert "Expert" not in names
+
+    async def test_level_eq_default_operator(
+        self, client: AsyncClient, skills_with_levels: list[Skill]
+    ):
+        """Omitting level_operator defaults to eq."""
+        response = await client.get(
+            "/api/v1/admin/skills",
+            params={"level": 50},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success"] is True
+        names = [s["name"] for s in body["data"]]
+        assert "Intermediate" in names
+        assert len(body["data"]) == 1
+
+    async def test_level_lt(
+        self, client: AsyncClient, skills_with_levels: list[Skill]
+    ):
+        """level_operator=lt should return skills with level < value."""
+        response = await client.get(
+            "/api/v1/admin/skills",
+            params={"level": 50, "level_operator": "lt"},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success"] is True
+        names = [s["name"] for s in body["data"]]
+        assert "Beginner" in names
+        assert "ZeroLevel" in names
+        assert "Intermediate" not in names
+        assert "Advanced" not in names
+
+    async def test_level_lte(
+        self, client: AsyncClient, skills_with_levels: list[Skill]
+    ):
+        """level_operator=lte should return skills with level <= value."""
+        response = await client.get(
+            "/api/v1/admin/skills",
+            params={"level": 50, "level_operator": "lte"},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success"] is True
+        names = [s["name"] for s in body["data"]]
+        assert "Beginner" in names
+        assert "ZeroLevel" in names
+        assert "Intermediate" in names
+        assert "Advanced" not in names
+
+    async def test_level_gt(
+        self, client: AsyncClient, skills_with_levels: list[Skill]
+    ):
+        """level_operator=gt should return skills with level > value."""
+        response = await client.get(
+            "/api/v1/admin/skills",
+            params={"level": 80, "level_operator": "gt"},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success"] is True
+        names = [s["name"] for s in body["data"]]
+        assert "Expert" in names
+        assert "Advanced" not in names
+        assert "Intermediate" not in names
+
+    async def test_level_gte(
+        self, client: AsyncClient, skills_with_levels: list[Skill]
+    ):
+        """level_operator=gte should return skills with level >= value."""
+        response = await client.get(
+            "/api/v1/admin/skills",
+            params={"level": 80, "level_operator": "gte"},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success"] is True
+        names = [s["name"] for s in body["data"]]
+        assert "Advanced" in names
+        assert "Expert" in names
+        assert "Intermediate" not in names
+        assert "Beginner" not in names
+
+    async def test_level_filter_no_level_param(
+        self, client: AsyncClient, skills_with_levels: list[Skill]
+    ):
+        """Omitting level entirely should return all skills (no filter)."""
+        response = await client.get(
+            "/api/v1/admin/skills",
+            params={"level_operator": "gte"},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success"] is True
+        # Should return all 6 skills since level is None (no filter applied)
+        assert len(body["data"]) == 6
+
+    async def test_level_filter_invalid_operator(
+        self, client: AsyncClient, skills_with_levels: list[Skill]
+    ):
+        """Invalid level_operator should return 422 error envelope."""
+        response = await client.get(
+            "/api/v1/admin/skills",
+            params={"level": 50, "level_operator": "invalid"},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success"] is False
+        assert body["status"] == 422
+        assert "level_operator" in body["message"]
+
+    async def test_level_zero(
+        self, client: AsyncClient, skills_with_levels: list[Skill]
+    ):
+        """level=0 should filter correctly (ZeroLevel skill)."""
+        response = await client.get(
+            "/api/v1/admin/skills",
+            params={"level": 0, "level_operator": "eq"},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success"] is True
+        names = [s["name"] for s in body["data"]]
+        assert "ZeroLevel" in names
+        assert len(body["data"]) == 1
+
+    async def test_level_filter_public_route(
+        self, client: AsyncClient, skills_with_levels: list[Skill]
+    ):
+        """Level filter also works on the public GET /api/v1/skills."""
+        response = await client.get(
+            "/api/v1/skills",
+            params={"level": 80, "level_operator": "gte"},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success"] is True
+        names = [s["name"] for s in body["data"]]
+        assert "Advanced" in names
+        assert "Expert" in names
+        assert "Beginner" not in names
+
+
+# ---------------------------------------------------------------------------
 # GroupBy (public route: /api/v1/skills)
 # ---------------------------------------------------------------------------
 
