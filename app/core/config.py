@@ -58,6 +58,9 @@ class Settings(BaseSettings):
     SMTP_FROM_EMAIL: str = "noreply@satryawiguna.me"
     SMTP_FROM_NAME: str = "Satrya Wiguna"
     BREVO_API_KEY: str = ""
+
+    # Contact form — where to send notification emails
+    CONTACT_TO_EMAIL: str = "satrya@frshcms.net"
     
     @property
     def SPACES_UPLOAD_FOLDER(self) -> str:
