@@ -22,3 +22,8 @@ class ContactRequest(BaseModel):
         max_length=5000,
         description="Message content",
     )
+    recaptcha_token: str = Field(
+        ...,
+        min_length=1,
+        description="reCAPTCHA Enterprise token from the frontend widget",
+    )

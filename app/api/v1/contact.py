@@ -17,8 +17,9 @@ router = APIRouter()
     summary="Send contact form message",
     description="""Submit a message through the contact form.
 
-    Sends a notification email to the site owner with the sender's name,
-    email address, and message content.
+    Verifies the request with reCAPTCHA Enterprise before forwarding
+    the message. On success, sends a notification email to the site
+    owner with the sender's name, email address, and message content.
 
     This endpoint is public and does **not** require authentication.
     """,
@@ -26,19 +27,23 @@ router = APIRouter()
         201: {
             "description": "Message sent successfully",
         },
+        400: {
+            "description": "reCAPTCHA verification failed or bad request",
+        },
     },
 )
 async def send_contact(
     request: ContactRequest,
 ):
     """
-    Submit a contact form message. No authentication required.
+    Submit a contact form message protected by reCAPTCHA Enterprise.
     """
     service = ContactService()
     result = await service.send_contact(
         identity=request.identity,
         email_address=request.email_address,
         transmission=request.transmission,
+        recaptcha_token=request.recaptcha_token,
     )
     return APIResponse.success(
         message="Message sent successfully",
