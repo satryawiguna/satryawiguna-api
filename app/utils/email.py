@@ -492,3 +492,142 @@ async def _send_verification_via_smtp(email: str, verification_url: str) -> bool
     except Exception as e:
         logger.error(f"Failed to send verification email to {email} via SMTP: {str(e)}")
         return False
+
+
+# ------------------------------------------------------------------
+# Contact form email
+# ------------------------------------------------------------------
+
+
+def _build_contact_html(identity: str, email_address: str, transmission: str) -> str:
+    """Build the contact form notification email HTML template.
+
+    Sent to the site owner when a visitor submits the contact form.
+    """
+    escaped_transmission = transmission.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background-color:#F1F5F9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#F1F5F9;padding:48px 0;">
+<tr><td align="center">
+
+<table width="600" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF;border-radius:12px;overflow:hidden;">
+
+<!-- HEADER -->
+<tr>
+  <td style="background-color:#0F172A;padding:24px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="left" style="font-size:18px;font-weight:700;color:#FFFFFF;letter-spacing:-0.3px;">Satrya Wiguna</td>
+    </tr>
+    </table>
+  </td>
+</tr>
+
+<!-- CONTENT -->
+<tr>
+  <td style="padding:48px 24px 36px 24px;">
+    <h1 style="margin:0;font-size:24px;font-weight:700;color:#0F172A;line-height:1.2;">New Contact Form Submission</h1>
+    <p style="margin:8px 0 0 0;font-size:14px;color:#64748B;">You have a message sent by <strong style="color:#0F172A;">{identity}</strong></p>
+
+    <!-- SENDER DETAILS -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:28px 0 0 0;border:1px solid #E2E8F0;border-radius:8px;">
+    <tr>
+      <td style="padding:16px 20px;border-bottom:1px solid #F1F5F9;">
+        <span style="font-size:11px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:1px;">From</span>
+        <p style="margin:4px 0 0 0;font-size:15px;color:#0F172A;">{identity}</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:16px 20px;border-bottom:1px solid #F1F5F9;">
+        <span style="font-size:11px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:1px;">Reply To</span>
+        <p style="margin:4px 0 0 0;font-size:15px;color:#3B82F6;"><a href="mailto:{email_address}" style="color:#3B82F6;text-decoration:none;">{email_address}</a></p>
+      </td>
+    </tr>
+    </table>
+
+    <!-- MESSAGE -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0 0 0;background-color:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;">
+    <tr>
+      <td style="padding:20px;">
+        <span style="font-size:11px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:1px;">Message</span>
+        <p style="margin:12px 0 0 0;font-size:15px;color:#334155;line-height:1.7;white-space:pre-wrap;">{escaped_transmission}</p>
+      </td>
+    </tr>
+    </table>
+  </td>
+</tr>
+
+</table>
+
+<!-- FOOTER -->
+<table width="600" cellpadding="0" cellspacing="0" style="margin-top:28px;">
+<tr>
+  <td style="text-align:center;padding:0 24px;">
+    <p style="margin:0;font-size:12px;color:#94A3B8;">
+      <span style="color:#64748B;">Satrya Wiguna</span>
+      &nbsp;&middot;&nbsp;
+      <span style="color:#64748B;">Portfolio</span>
+    </p>
+    <p style="margin:10px 0 6px 0;font-size:11px;color:#94A3B8;">
+      &copy; 2026 Satrya Wiguna. All rights reserved.
+    </p>
+  </td>
+</tr>
+</table>
+
+</td></tr>
+</table>
+</body>
+</html>"""
+
+
+async def send_contact_email(identity: str, email_address: str, transmission: str) -> bool:
+    """
+    Send contact form notification email via SMTP (Brevo).
+
+    The email is sent TO the site owner (CONTACT_TO_EMAIL) with the visitor's
+    details. The Reply-To header is set to the visitor's email so the owner
+    can reply directly.
+
+    Uses SMTP only — no Brevo API call.
+    """
+    html_content = _build_contact_html(identity, email_address, transmission)
+    message = MIMEMultipart("alternative")
+    message["From"] = f"{settings.SMTP_FROM_NAME} <{settings.SMTP_FROM_EMAIL}>"
+    message["To"] = settings.CONTACT_TO_EMAIL
+    message["Reply-To"] = f"{identity} <{email_address}>"
+    message["Subject"] = f"You have a message sent by {identity}"
+    message.attach(MIMEText(
+        f"NEW CONTACT FORM SUBMISSION\n"
+        f"============================\n\n"
+        f"You have a message sent by {identity}\n\n"
+        f"From: {identity}\n"
+        f"Reply To: {email_address}\n\n"
+        f"Message:\n"
+        f"{transmission}\n\n"
+        f"--\n"
+        f"Satrya Wiguna",
+        "plain",
+    ))
+    message.attach(MIMEText(html_content, "html"))
+    try:
+        await aiosmtplib.send(
+            message,
+            hostname=settings.SMTP_HOST,
+            port=settings.SMTP_PORT,
+            username=settings.SMTP_USERNAME,
+            password=settings.SMTP_PASSWORD,
+            start_tls=True,
+        )
+        logger.info(f"Contact email sent — from {identity} <{email_address}>")
+        return True
+    except Exception as e:
+        logger.error(
+            f"Failed to send contact email — from {identity} <{email_address}>: {str(e)}"
+        )
+        return False
