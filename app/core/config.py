@@ -58,6 +58,16 @@ class Settings(BaseSettings):
     SMTP_FROM_EMAIL: str = "noreply@satryawiguna.me"
     SMTP_FROM_NAME: str = "Satrya Wiguna"
     BREVO_API_KEY: str = ""
+
+    # Contact form — where to send notification emails
+    CONTACT_TO_EMAIL: str = "satrya@frshcms.net"
+
+    # reCAPTCHA Enterprise — bot detection for public forms (contact, etc.)
+    RECAPTCHA_PROJECT_ID: str = "gen-lang-client-0859695744"
+    RECAPTCHA_SITE_KEY: str = "6LdDQ18tAAAAAIEKdGL74fEcH9BT85oXyiOb3DPN"
+    # Generate with: gcloud auth print-access-token (or set in .env)
+    RECAPTCHA_API_KEY: str = ""
+    RECAPTCHA_SCORE_THRESHOLD: float = 0.5
     
     @property
     def SPACES_UPLOAD_FOLDER(self) -> str:

@@ -3,7 +3,7 @@ API v1 router configuration
 """
 from fastapi import APIRouter
 
-from app.api.v1 import blog_posts, auth, media, projects, skills, categories, tags, experiences, educations, settings, strengths, career_impacts, subscriptions
+from app.api.v1 import blog_posts, auth, media, projects, skills, categories, tags, experiences, educations, settings, strengths, career_impacts, subscriptions, contact
 from app.api.v1.admin import users as admin_users
 from app.api.v1.admin import subscriptions as admin_subscriptions
 from app.api.v1.admin import projects as admin_projects
@@ -47,3 +47,4 @@ api_router.include_router(settings.router, prefix="/settings", tags=["Settings"]
 api_router.include_router(strengths.router, prefix="/strengths", tags=["Strengths"])
 api_router.include_router(career_impacts.router, prefix="/career-impacts", tags=["Career Impacts"])
 api_router.include_router(subscriptions.router, prefix="/subscriptions", tags=["Subscriptions"])
+api_router.include_router(contact.router, prefix="/contact", tags=["Contact"])
